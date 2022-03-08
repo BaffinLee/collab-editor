@@ -6,6 +6,7 @@
     "dev": "cross-env NODE_ENV=development nodemon",
     "start": "cross-env NODE_ENV=development pm2 start",
     "stop": "pm2 stop colla-editor-server",
+    "log": "pm2 log",
     "delete": "pm2 delete colla-editor-server"
   },
   "dependencies": {

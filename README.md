@@ -17,7 +17,7 @@
 
 This codebase is just for fun and learning OT algorithm. **DO NOT USE ANY CODE IN PRODUCTION ENVIRONMENT.**
 
-##install
+## install
 
 ```bash
 yarn install
@@ -32,14 +32,18 @@ cd server && yarn install
 ```base
 yarn start
 
+# server is running at http://localhost:3123
+
 yarn stop
 ```
 
 ## Develop
 
 ```bash
+# http://localhost:3123
 yarn dev:server
 
+# http://localhost:3124
 yarn dev:web
 ```
 
