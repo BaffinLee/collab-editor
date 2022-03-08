@@ -7,6 +7,8 @@
     "start": "cd server && npm run start",
     "build": "cd web && npm run build && fse remove ../server/public && fse copy --quiet dist ../server/public",
     "heroku-prebuild": "cd server && yarn && cd ../web && yarn",
+    "dev:web": "cd web && npm run dev",
+    "dev:server": "cd server && npm run dev",
     "test": "jest --coverage"
   },
   "engines": {

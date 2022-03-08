@@ -2,7 +2,11 @@
 
 > Collaborative coding editor base on [monaco](https://microsoft.github.io/monaco-editor/index.html) and [OT algorithm](https://en.wikipedia.org/wiki/Operational_transformation)
 
-## Feature
+## Try it out
+
+[https://colla-editor.herokuapp.com/](https://colla-editor.herokuapp.com/)
+
+## Features
 
 - Collaborative coding with all the conflicts auto merged.
 - Undo/redo with OT enabled.
@@ -30,11 +34,11 @@ cd server && yarn install
 ## Run the app
 
 ```base
+yarn build
+
 yarn start
 
 # server is running at http://localhost:3123
-
-yarn stop
 ```
 
 ## Develop
