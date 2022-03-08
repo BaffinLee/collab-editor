@@ -4,12 +4,13 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "start": "cd web && npm run build && fse remove ../server/public && fse copy --quiet dist ../server/public && cd ../server && npm run start",
-    "stop": "cd server && npm run stop",
-    "dev": "npm run dev:server & npm run dev:web",
-    "dev:server": "cd server && npm run dev",
-    "dev:web": "cd web && npm run dev",
+    "start": "cd server && npm run start",
+    "build": "cd web && npm run build && fse remove ../server/public && fse copy --quiet dist ../server/public",
+    "heroku-prebuild": "cd server && yarn && cd ../web && yarn",
     "test": "jest --coverage"
+  },
+  "engines": {
+    "node": "14.x"
   },
   "license": "ISC",
   "devDependencies": {

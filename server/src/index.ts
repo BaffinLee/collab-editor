@@ -10,7 +10,7 @@ import { WebSocketServer } from 'ws';
 import RoomService from './service/RoomService';
 import HomeController from './controller/HomeController';
 
-const port = 3123;
+const port = process.env.PORT || 3123;
 const host = '0.0.0.0';
 
 const app = new Koa();
@@ -27,7 +27,7 @@ app.use(cors());
 app.use(HomeController.showHomePage);
 
 createConnection().then(() => {
-  const server = app.listen(port, host, () => {
+  const server = app.listen(+port, host, () => {
     console.log(`server is now running at http://localhost:${port}`);
   });
   const wss = new WebSocketServer({ server });
