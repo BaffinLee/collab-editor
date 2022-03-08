@@ -9,11 +9,12 @@ interface Position {
 
 export default class MonacoWidget {
   private domNode: null | HTMLDivElement;
-  private position: Position = {
-    lineNumber: 3,
-    column: 3,
-  };
   private timer: number = 0;
+  private offset: number = -1;
+  private position: Position = {
+    lineNumber: -1,
+    column: -1,
+  };
 
   constructor(
     private color: string,
@@ -54,10 +55,14 @@ export default class MonacoWidget {
     };
   }
 
-  setPosition(position: Position, doNotOpen?: boolean) {
+  setPosition(position: Position, offset: number) {
+    const changed = this.offset !== offset;
     this.position = position;
-    if (doNotOpen) return;
+    this.offset = offset;
+    changed && this.openFlag();
+  }
 
+  openFlag() {
     this.domNode?.classList.add('open');
     this.timer && window.clearTimeout(this.timer);
     this.timer = window.setTimeout(() => {

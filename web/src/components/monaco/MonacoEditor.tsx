@@ -54,7 +54,6 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
 
   private handleModelUpdate = (data: ModelUpdateEvent) => {
     this.isApplying = true;
-    // this.props.room.transformCursor(data.changesets);
     data.applyType !== ApplyType.Edit && data.changesets.forEach(changeset => {
       changeset.operations.forEach(operation => {
         const editorModel = this.editor?.getModel();
@@ -123,17 +122,23 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
   }
 
   private handleRoomUpdate = (members: RoomMemberInfo[]) => {
+    const model = this.editor?.getModel();
+    if (!model) return;
+
     const oldMap = this.cursorMap;
     this.cursorMap = {};
     members.forEach(member => {
       if (member.memberId === this.props.user.memberId) return;
+      if (!member.cursor) return;
       const cursor = oldMap[member.memberId] || new MonacoWidget(
         member.color!,
         member.name,
         member.memberId,
       );
-      const model = this.editor?.getModel();
-      model && member.cursor && cursor.setPosition(model.getPositionAt(member.cursor.rangeStart), this.isApplying);
+      cursor.setPosition(
+        model.getPositionAt(member.cursor.rangeStart),
+        member.cursor.rangeStart,
+      );
       this.cursorMap[member.memberId] = cursor;
       this.editor?.addContentWidget(cursor);
     });

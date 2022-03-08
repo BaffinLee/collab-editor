@@ -1,8 +1,5 @@
-import Changeset from "../../../common/model/Changeset";
-import { transformCusrsor } from "../../../common/transform/transform";
 import type { RoomMemberInfo, UserInfo } from "../../../common/type";
 import { RoomChangeType, SocketMessage, SocketMessageType } from "../../../common/type/message";
-import { getChangesetOperations } from "../../../common/utils";
 import EventEmitter from "../../../common/utils/EventEmitter";
 import type IO from "./IO";
 
@@ -45,21 +42,6 @@ export default class Room extends EventEmitter {
         },
       },
     }]);
-  }
-
-  transformCursor(changesets: Changeset[]) {
-    const operations = getChangesetOperations(changesets);
-    this.members = this.members.map(member => {
-      const rangeStart = member.cursor && transformCusrsor(operations, member.cursor.rangeStart);
-      return {
-        ...member,
-        cursor: member.cursor && {
-          rangeStart: rangeStart!,
-          rangeEnd: rangeStart!,
-        },
-      }
-    });
-    this.triggerEvent('update', this.members);
   }
 
   destroy() {

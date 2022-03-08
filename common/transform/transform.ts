@@ -73,7 +73,7 @@ export function transformOperation(
   }
 }
 
-export function transformCusrsor(
+export function transformCursor(
   operations: Operation[],
   offset: number,
 ) {

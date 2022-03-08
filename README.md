@@ -1,4 +1,4 @@
-# Coola Editor
+# Colla Editor
 
 > Collaborative coding editor base on [monaco](https://microsoft.github.io/monaco-editor/index.html) and [OT algorithm](https://en.wikipedia.org/wiki/Operational_transformation)
 
@@ -17,7 +17,7 @@
 
 This codebase is just for fun and learning OT algorithm. **DO NOT USE ANY CODE IN PRODUCTION ENVIRONMENT.**
 
-## install
+## Install
 
 ```bash
 yarn install
