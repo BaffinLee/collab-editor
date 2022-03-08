@@ -1,0 +1,22 @@
+.home-page {
+  width: 100vw;
+  height: 100vh;
+  background-color: #f9fafb;
+
+  & > .container {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    margin: 0 auto;
+    width: 80%;
+    height: calc(100vh - 140px);
+    max-width: 1200px;
+  }
+
+  .ant-skeleton {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    transform: translateY(-50%);
+  }
+}
