@@ -5,6 +5,7 @@ export enum SocketMessageType {
   Heartbeat = 'heartbeat',
   UserChange = 'userChange',
   RoomChange = 'roomChange',
+  CursorChange = 'CursorChange',
 }
 
 export enum RoomChangeType {
@@ -14,6 +15,7 @@ export enum RoomChangeType {
 
 export type SocketMessage = HeartbeatMessage
   | UserChangeMessage
+  | CursorChangeMessage
   | RoomChangeMessage;
 
 export interface HeartbeatMessage {
@@ -37,5 +39,17 @@ export interface RoomChangeMessage {
       type: RoomChangeType;
       user: UserInfo;
     }[];
+  };
+}
+
+export interface CursorChangeMessage {
+  type: SocketMessageType.CursorChange;
+  data: {
+    userId: number;
+    memberId: number;
+    cursor: {
+      rangeStart: number;
+      rangeEnd: number;
+    },
   };
 }

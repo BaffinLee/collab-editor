@@ -1,0 +1,40 @@
+.member-cursor {
+  position: relative;
+  width: 2px;
+  height: 22px;
+  transform: translate(-1px, -1px);
+
+  &:hover,
+  &.open {
+    .member-cursor-flag {
+      width: unset;
+      height: 16px;
+      padding: 0 2px;
+      top: -14px;
+
+      span {
+        display: inline;
+      }
+    }
+  }
+}
+
+.member-cursor-flag {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  top: -2px;
+  left: -2px;
+  line-height: 16px;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 80px;
+  overflow: hidden;
+  transition: all 0.1s ease;
+  color: white;
+
+  span {
+    display: none;
+  }
+}

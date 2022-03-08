@@ -14,6 +14,10 @@ export interface UserInfo {
 
 export interface RoomMemberInfo extends UserInfo {
   color?: string;
+  cursor?: {
+    rangeStart: number;
+    rangeEnd: number;
+  };
 }
 
 export interface ModelUpdateEvent {

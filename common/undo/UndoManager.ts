@@ -3,6 +3,7 @@ import { ApplyType } from "../model/Model";
 import Operation from "../operation/Operation";
 import { invertOperations } from "../transform/invert";
 import { transformOperations, TransformType } from "../transform/transform";
+import { getChangesetOperations } from "../utils";
 import EventEmitter from "../utils/EventEmitter";
 import { addEventListener, removeEventListener } from "../utils/undo-event";
 
@@ -23,7 +24,7 @@ export default class UndoManager extends EventEmitter {
 
   pushChangesets(changesets: Changeset[]) {
     this.redoStack = [];
-    this.undoStack.unshift(invertOperations(this.getOperations(changesets)));
+    this.undoStack.unshift(invertOperations(getChangesetOperations(changesets)));
     this.triggerEvent('stackChange');
   }
 
@@ -48,7 +49,7 @@ export default class UndoManager extends EventEmitter {
   }
 
   transformChangesets(changesets: Changeset[]) {
-    const serverOperations = this.getOperations(changesets);
+    const serverOperations = getChangesetOperations(changesets);
     this.undoStack = this.undoStack
       .map(ops => transformOperations(ops, serverOperations, TransformType.Right)[0])
       .filter(ops => !!ops.length);
@@ -64,12 +65,5 @@ export default class UndoManager extends EventEmitter {
 
   getRedoStackLength() {
     return this.redoStack.length;
-  }
-
-  private getOperations(changesets: Changeset[]) {
-    return changesets.reduce((ops, changeset) => {
-      ops.push(...changeset.operations);
-      return ops;
-    }, [] as Operation[]);
   }
 }

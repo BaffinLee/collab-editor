@@ -1,5 +1,8 @@
+import Changeset from "../../../common/model/Changeset";
+import { transformCusrsor } from "../../../common/transform/transform";
 import type { RoomMemberInfo, UserInfo } from "../../../common/type";
 import { RoomChangeType, SocketMessage, SocketMessageType } from "../../../common/type/message";
+import { getChangesetOperations } from "../../../common/utils";
 import EventEmitter from "../../../common/utils/EventEmitter";
 import type IO from "./IO";
 
@@ -30,6 +33,35 @@ export default class Room extends EventEmitter {
     return this.members;
   }
 
+  updateUserCursor(data: UserInfo & { rangeStart: number }) {
+    this.io.send([{
+      type: SocketMessageType.CursorChange,
+      data: {
+        userId: data.id,
+        memberId: data.memberId,
+        cursor: {
+          rangeStart: data.rangeStart,
+          rangeEnd: data.rangeStart,
+        },
+      },
+    }]);
+  }
+
+  transformCursor(changesets: Changeset[]) {
+    const operations = getChangesetOperations(changesets);
+    this.members = this.members.map(member => {
+      const rangeStart = member.cursor && transformCusrsor(operations, member.cursor.rangeStart);
+      return {
+        ...member,
+        cursor: member.cursor && {
+          rangeStart: rangeStart!,
+          rangeEnd: rangeStart!,
+        },
+      }
+    });
+    this.triggerEvent('update', this.members);
+  }
+
   destroy() {
     this.io.removeEventListener('message', this.handleMessage);
   }
@@ -53,6 +85,13 @@ export default class Room extends EventEmitter {
           }
           changed = true;
         });
+      } else if (message.type === SocketMessageType.CursorChange) {
+        const index = this.members.findIndex(user => user.memberId === message.data.memberId);
+        if (index !== -1) {
+          this.members[index].cursor = message.data.cursor;
+          this.members = [...this.members];
+          changed = true;
+        }
       }
     });
     changed && this.triggerEvent('update', this.members);

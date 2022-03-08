@@ -11,6 +11,7 @@ import Model, { ApplyType } from '../../../common/model/Model';
 import Operation from '../../../common/operation/Operation';
 import { getLock, releaseLock } from '../utils/lock';
 import { SocketMessageType } from '../../../common/type/message';
+import { getChangesetOperations } from '../../../common/utils';
 
 export default class CodeController {
   static async get(ctx: Context) {
@@ -69,11 +70,7 @@ export default class CodeController {
       const model = new Model(code.content);
       model.applyChangesets(changesets, ApplyType.Server);
 
-      const operations = (changesets.reduce((ops, changeset) => {
-        ops.push(...changeset.operations);
-        return ops;
-      }, [] as Operation[]));
-
+      const operations = getChangesetOperations(changesets);
       await CodeService.update(model.getContent(), code.version + 1, codeId);
       await ChangesetService.save(
         codeId,

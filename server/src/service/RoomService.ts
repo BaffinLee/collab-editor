@@ -90,6 +90,9 @@ export default class RoomService {
         case SocketMessageType.Heartbeat:
           this.handleHeartbeat(client);
           break;
+        case SocketMessageType.CursorChange:
+          this.broadcastMessages([message], client.codeId, client.memberId);
+          break;
       }
     });
   }

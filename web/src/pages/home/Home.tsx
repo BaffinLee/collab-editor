@@ -140,6 +140,8 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
             <MonacoEditor
               content={code}
               model={this.model}
+              room={this.room!}
+              user={user}
               disabled={syncState === SyncState.Error}
             />
           )}

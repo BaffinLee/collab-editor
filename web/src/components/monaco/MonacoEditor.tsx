@@ -3,20 +3,30 @@ import * as monaco from 'monaco-editor';
 import "./MonacoEditor.less";
 import Model, { ApplyType } from "../../../../common/model/Model";
 import Operation, { OperationType } from "../../../../common/operation/Operation";
-import { ModelUpdateEvent } from "../../../../common/type";
+import { ModelUpdateEvent, RoomMemberInfo, UserInfo } from "../../../../common/type";
+import Room from "../../service/Room";
+import MonacoWidget from "./MonacoWidget";
 
 interface MonacoEditorProps {
   content: string;
   model: Model;
+  room: Room;
+  user: UserInfo;
   disabled?: boolean;
 }
 
 export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
   private editor?: monaco.editor.ICodeEditor;
-  private isApplying: boolean = false
+  private isApplying: boolean = false;
+  private cursorMap: {
+    [memberId: number]: MonacoWidget;
+  } = {};
+  private sendCursorTimer: number = 0;
+  private lastCursorOffset = 0;
 
   componentDidMount() {
     this.props.model.addEventListener('update', this.handleModelUpdate);
+    this.props.room.addEventListener('update', this.handleRoomUpdate);
   }
 
   componentDidUpdate(prevProps: MonacoEditorProps) {
@@ -30,6 +40,7 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
   componentWillUnmount() {
     this.editor?.dispose();
     this.props.model.removeEventListener('update', this.handleModelUpdate);
+    this.props.room.removeEventListener('update', this.handleRoomUpdate);
   }
 
   render() {
@@ -42,11 +53,9 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
   }
 
   private handleModelUpdate = (data: ModelUpdateEvent) => {
-    if (data.applyType === ApplyType.Edit) {
-      return;
-    }
     this.isApplying = true;
-    data.changesets.forEach(changeset => {
+    // this.props.room.transformCursor(data.changesets);
+    data.applyType !== ApplyType.Edit && data.changesets.forEach(changeset => {
       changeset.operations.forEach(operation => {
         const editorModel = this.editor?.getModel();
         editorModel?.applyEdits([{
@@ -97,6 +106,41 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
         );
       });
       this.props.model.applyOperations(operations, ApplyType.Edit);
+    });
+    this.editor.onDidChangeCursorPosition(data => {
+      this.lastCursorOffset = this.editor?.getModel()?.getOffsetAt(data.position) || this.lastCursorOffset;
+      if (this.sendCursorTimer) {
+        return;
+      }
+      this.sendCursorTimer = window.setTimeout(() => {
+        this.sendCursorTimer = 0;
+        this.props.room.updateUserCursor({
+          ...this.props.user,
+          rangeStart: this.lastCursorOffset,
+        });
+      }, 1000);
+    });
+  }
+
+  private handleRoomUpdate = (members: RoomMemberInfo[]) => {
+    const oldMap = this.cursorMap;
+    this.cursorMap = {};
+    members.forEach(member => {
+      if (member.memberId === this.props.user.memberId) return;
+      const cursor = oldMap[member.memberId] || new MonacoWidget(
+        member.color!,
+        member.name,
+        member.memberId,
+      );
+      const model = this.editor?.getModel();
+      model && member.cursor && cursor.setPosition(model.getPositionAt(member.cursor.rangeStart), this.isApplying);
+      this.cursorMap[member.memberId] = cursor;
+      this.editor?.addContentWidget(cursor);
+    });
+    Object.keys(oldMap).forEach(id => {
+      if (!this.cursorMap[+id]) {
+        this.editor?.removeContentWidget(oldMap[+id]);
+      }
     });
   }
 }

@@ -3,6 +3,7 @@ import Changeset from "../../../common/model/Changeset";
 import Model from "../../../common/model/Model";
 import Operation from "../../../common/operation/Operation";
 import { invertOperations } from "../../../common/transform/invert";
+import { getChangesetOperations } from "../../../common/utils";
 import { convertChangesets } from "../../../common/utils/type";
 import ChangesetEntity from "../entity/ChangesetEntity";
 import CodeEntity from "../entity/CodeEntity";
@@ -70,11 +71,7 @@ export default class HistoryController {
 
     const list = await ChangesetService.getByRange(codeId, version, code.version);
     const changesets = convertChangesets(list.map(item => ({ ...item, operations: item.getOperations() })));
-    let operations = changesets.reduce((ops, changeset) => {
-      ops.push(...changeset.operations);
-      return ops;
-    }, [] as Operation[]);
-    operations = invertOperations(operations);
+    const operations = invertOperations(getChangesetOperations(changesets));
 
     ctx.request.body.changesets = [new Changeset(
       operations,
