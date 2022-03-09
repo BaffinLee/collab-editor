@@ -73,32 +73,6 @@ export function transformOperation(
   }
 }
 
-export function transformCursor(
-  operations: Operation[],
-  offset: number,
-) {
-  operations.forEach(operation => {
-    switch (operation.type) {
-      case OperationType.Insert:
-        if (operation.rangeStart <= offset) {
-          offset += operation.text.length;
-        }
-      case OperationType.Delete:
-      case OperationType.Update:
-        const diffTextLength = operation.rangeEnd - operation.rangeStart - operation.text.length;
-        if (offset >= operation.rangeEnd) {
-          offset -= diffTextLength;
-        } else if (offset < operation.rangeStart) {
-          offset = operation.rangeStart;
-        }
-        break;
-      default:
-        assertNever(operation.type);
-    }
-  });
-  return offset;
-}
-
 function transformInsertOperation(
   operation1: Operation,
   operation2: Operation,

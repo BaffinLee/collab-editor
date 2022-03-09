@@ -8,10 +8,11 @@ import ChangesetService from '../service/ChangesetService';
 import Changeset from '../../../common/model/Changeset';
 import { transformChangesets, TransformType } from '../../../common/transform/transform';
 import Model, { ApplyType } from '../../../common/model/Model';
-import Operation from '../../../common/operation/Operation';
 import { getLock, releaseLock } from '../utils/lock';
 import { SocketMessageType } from '../../../common/type/message';
 import { getChangesetOperations } from '../../../common/utils';
+import { getManager } from 'typeorm';
+import ChangesetEntity from '../entity/ChangesetEntity';
 
 export default class CodeController {
   static async get(ctx: Context) {
@@ -54,9 +55,10 @@ export default class CodeController {
     try {
       code = await CodeEntity.findOne({ codeId }) as CodeEntity;
 
+      const codeVersion = code.version;
       let beforeChangesets: Changeset[] = [];
-      if (baseVersion < code.version) {
-        beforeChangesets = await ChangesetService.getByRange(codeId, baseVersion, code.version);
+      if (baseVersion < codeVersion) {
+        beforeChangesets = await ChangesetService.getByRange(codeId, baseVersion, codeVersion);
         [changesets, beforeChangesets] = transformChangesets(changesets, beforeChangesets, TransformType.Left);
       }
 
@@ -64,19 +66,28 @@ export default class CodeController {
       model.applyChangesets(changesets, ApplyType.Server);
 
       const operations = getChangesetOperations(changesets);
-      await CodeService.update(model.getContent(), code.version + 1, codeId);
-      await ChangesetService.save(
-        codeId,
-        JSON.stringify(operations),
-        code.version,
-        userId,
-        memberId,
-      );
+
+      await getManager().transaction(async transactionalEntityManager => {
+        await CodeService.save(
+          model.getContent(),
+          codeVersion + 1,
+          code!,
+          transactionalEntityManager,
+        );
+
+        const changeset = new ChangesetEntity();
+        changeset.codeId = codeId;
+        changeset.operations = JSON.stringify(operations);
+        changeset.baseVersion = codeVersion;
+        changeset.userId = userId;
+        changeset.memberId = memberId;
+        await transactionalEntityManager.save(changeset);
+      });
 
       RoomService.broadcastMessages([operations.length > 100 ? {
         type: SocketMessageType.Heartbeat,
         data: {
-          version: code.version + 1,
+          version: codeVersion + 1,
         },
       } : {
         type: SocketMessageType.UserChange,
@@ -85,7 +96,7 @@ export default class CodeController {
             operations,
             userId,
             memberId,
-            code.version,
+            codeVersion,
           )],
         },
       }], codeId, memberId);
@@ -93,7 +104,7 @@ export default class CodeController {
       releaseLock(codeId);
 
       ctx.body = {
-        version: code.version + 1,
+        version: codeVersion + 1,
         changesets: beforeChangesets,
       };
     } catch (error) {

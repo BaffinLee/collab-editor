@@ -1,30 +1,37 @@
 import { DEFAULT_CODE } from '../../../common/utils/text';
 import CodeEntity from '../entity/CodeEntity';
-import SnapshotService, { SNAPSHOT_NUM } from './SnapshotService';
+import { SNAPSHOT_NUM } from './SnapshotService';
+import { getManager, EntityManager } from 'typeorm';
+import SnapshotEntity from '../entity/SnapshotEntity';
 
 export default class CodeService {
   static async getOrCreate(codeId: string) {
     return await CodeEntity.findOne({ codeId }) || this.save(DEFAULT_CODE, 0, codeId);
   }
 
-  static async update(content: string, version: number, codeId: string) {
-    const code = await CodeEntity.findOne({ codeId });
-    if (!code) {
-      throw new Error('codeId not exist');
-    }
-    return this.save(content, version, code);
-  }
-
-  static async save(content: string, version: number, codeOrId: CodeEntity | string) {
+  static async save(content: string, version: number, codeOrId: CodeEntity | string, manager?: EntityManager) {
     const isCreate = typeof codeOrId === 'string';
     const code = isCreate ? new CodeEntity() : codeOrId;
-    if (isCreate) code.codeId = codeOrId;
-    code.content = content;
-    code.version = version;
-    await code.save();
 
-    if (version % SNAPSHOT_NUM === 0) {
-      await SnapshotService.save(content, version, code.codeId);
+    const save = async (transactionalEntityManager: EntityManager) => {
+      if (isCreate) code.codeId = codeOrId;
+      code.content = content;
+      code.version = version;
+      await transactionalEntityManager.save(code);
+  
+      if (version % SNAPSHOT_NUM === 0) {
+        const snapshot = new SnapshotEntity();
+        snapshot.codeId = code.codeId;
+        snapshot.content = content;
+        snapshot.version = version;
+        await transactionalEntityManager.save(snapshot);
+      }
+    };
+
+    if (manager) {
+      await save(manager);
+    } else {
+      await getManager().transaction(save);
     }
 
     return code;
