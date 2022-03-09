@@ -16,6 +16,8 @@ export default class MonacoWidget {
     column: -1,
   };
 
+  readonly allowEditorOverflow = true;
+
   constructor(
     private color: string,
     private name: string,
@@ -59,12 +61,10 @@ export default class MonacoWidget {
     const changed = this.offset !== offset;
     this.position = position;
     this.offset = offset;
-    this.getDomNode().classList.toggle('is-left-edge', position.column === 1);
-    this.getDomNode().classList.toggle('is-top-edge', position.lineNumber === 1);
     changed && this.openFlag();
   }
 
-  openFlag() {
+  private openFlag() {
     this.domNode?.classList.add('open');
     this.timer && window.clearTimeout(this.timer);
     this.timer = window.setTimeout(() => {

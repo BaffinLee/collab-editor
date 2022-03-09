@@ -38,6 +38,7 @@ export default class IO extends EventEmitter {
   close() {
     if (this.closed) return;
     this.closed = true;
+    this.handleClose();
     this.ws.close();
     window.clearInterval(this.heartbeatTimer);
     document.removeEventListener('visibilitychange', this.handleVisibilitychange);
@@ -77,7 +78,6 @@ export default class IO extends EventEmitter {
   }
 
   private handleOpen = () => {
-    console.log('ws opened');
     this.retryTimes = 0;
     this.ws.send('1');
     this.flush();
@@ -99,8 +99,6 @@ export default class IO extends EventEmitter {
   }
 
   private handleClose = () => {
-    console.log('ws closed');
-
     this.ws.removeEventListener('open', this.handleOpen);
     this.ws.removeEventListener('message', this.handleMessage);
     this.ws.removeEventListener('error', this.handleError);

@@ -26,9 +26,15 @@ export function transformChangesets(
   return [
     changesets1.map(changeset => new Changeset(
       operations1.splice(0, changeset.operations.length).filter(op => !!op),
+      changeset.userId,
+      changeset.memberId,
+      changeset.baseVersion,
     )).filter(changeset => changeset.operations.length !== 0),
     changesets2.map(changeset => new Changeset(
       operations2.splice(0, changeset.operations.length).filter(op => !!op),
+      changeset.userId,
+      changeset.memberId,
+      changeset.baseVersion,
     )).filter(changeset => changeset.operations.length !== 0),
   ];
 }

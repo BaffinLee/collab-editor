@@ -23,6 +23,7 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
   } = {};
   private sendCursorTimer: number = 0;
   private lastCursorOffset = 0;
+  private ignoreEditCursor = false;
 
   componentDidMount() {
     this.props.model.addEventListener('update', this.handleModelUpdate);
@@ -54,6 +55,7 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
 
   private handleModelUpdate = (data: ModelUpdateEvent) => {
     this.isApplying = true;
+    const memberCursorMap:  { [memberId: number]: { rangeStart: number }} = {};
     data.applyType !== ApplyType.Edit && data.changesets.forEach(changeset => {
       changeset.operations.forEach(operation => {
         const editorModel = this.editor?.getModel();
@@ -62,7 +64,15 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
           range: (editorModel as any).getRangeAt(operation.rangeStart, operation.rangeEnd),
         }]);
       });
+      if (changeset.memberId && changeset.operations.length) {
+        const operation = changeset.operations[changeset.operations.length - 1];
+        const offset = operation.rangeEnd + operation.text.length - (operation.rangeEnd - operation.rangeStart);
+        memberCursorMap[changeset.memberId] = {
+          rangeStart: offset,
+        };
+      }
     });
+    this.props.room.updateMemberCursor(memberCursorMap);
     this.isApplying = false;
   }
 
@@ -105,8 +115,18 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
         );
       });
       this.props.model.applyOperations(operations, ApplyType.Edit);
+
+      if (!this.ignoreEditCursor) {
+        this.ignoreEditCursor = true;
+        Promise.resolve().then(() => {
+          this.ignoreEditCursor = false;
+        });
+      }
     });
     this.editor.onDidChangeCursorPosition(data => {
+      if (this.ignoreEditCursor) {
+        return;
+      }
       const model = this.editor?.getModel();
       this.lastCursorOffset = model ? model.getOffsetAt(data.position) : this.lastCursorOffset;
       if (this.sendCursorTimer) {
@@ -114,7 +134,7 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
       }
       this.sendCursorTimer = window.setTimeout(() => {
         this.sendCursorTimer = 0;
-        this.props.room.updateUserCursor({
+        this.props.room.sendMemberCursor({
           ...this.props.user,
           rangeStart: this.lastCursorOffset,
         });
@@ -141,7 +161,9 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
         member.cursor.rangeStart,
       );
       this.cursorMap[member.memberId] = cursor;
-      this.editor?.addContentWidget(cursor);
+      oldMap[member.memberId]
+        ? this.editor?.layoutContentWidget(cursor)
+        : this.editor?.addContentWidget(cursor);
     });
     Object.keys(oldMap).forEach(id => {
       if (!this.cursorMap[+id]) {
