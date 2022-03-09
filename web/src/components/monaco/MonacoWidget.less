@@ -17,6 +17,25 @@
       }
     }
   }
+
+  &.is-top-edge {
+    .member-cursor-flag {
+      top: unset;
+      bottom: -2px;
+    }
+
+    &:hover,
+    &.open {
+      .member-cursor-flag {
+        top: unset;
+        bottom: -12px;
+      }
+    }
+  }
+
+  &.is-left-edge {
+    transform: translate(2px, 0px);
+  }
 }
 
 .member-cursor-flag {

@@ -59,6 +59,8 @@ export default class MonacoWidget {
     const changed = this.offset !== offset;
     this.position = position;
     this.offset = offset;
+    this.getDomNode().classList.toggle('is-left-edge', position.column === 1);
+    this.getDomNode().classList.toggle('is-top-edge', position.lineNumber === 1);
     changed && this.openFlag();
   }
 

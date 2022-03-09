@@ -107,7 +107,8 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
       this.props.model.applyOperations(operations, ApplyType.Edit);
     });
     this.editor.onDidChangeCursorPosition(data => {
-      this.lastCursorOffset = this.editor?.getModel()?.getOffsetAt(data.position) || this.lastCursorOffset;
+      const model = this.editor?.getModel();
+      this.lastCursorOffset = model ? model.getOffsetAt(data.position) : this.lastCursorOffset;
       if (this.sendCursorTimer) {
         return;
       }
