@@ -80,7 +80,7 @@ export default class Sync extends EventEmitter {
     try {
       let changesets = await getChangesets(this.codeId, this.version, latestVersion);
       changesets = convertChangesets(changesets);
-      this.pendingChangesets = transformChangesets(this.pendingChangesets, changesets, TransformType.Right)[0];
+      this.pendingChangesets = transformChangesets(this.pendingChangesets, changesets, TransformType.Left)[0];
       this.triggerEvent('serverChangesets', changesets);
       this.version = latestVersion;
       this.updateReadyState(SyncState.Ready);
@@ -98,7 +98,7 @@ export default class Sync extends EventEmitter {
       const data = await uploadChangesets(this.codeId, this.user.memberId, this.version, changesets);
       if (data.version !== this.version + 1) {
         data.changesets = convertChangesets(data.changesets);
-        const [clientChangesets, serverChangesets] = transformChangesets(this.pendingChangesets, data.changesets, TransformType.Right);
+        const [clientChangesets, serverChangesets] = transformChangesets(this.pendingChangesets, data.changesets, TransformType.Left);
         this.pendingChangesets = clientChangesets;
         this.triggerEvent('serverChangesets', serverChangesets);
       }
@@ -138,13 +138,16 @@ export default class Sync extends EventEmitter {
       return;
     }
 
-    const latestVersion = changesets[changesets.length - 1].baseVersion!;
+    const latestVersion = changesets[changesets.length - 1].baseVersion! + 1;
     if (latestVersion > this.version + 1) {
       this.fetchMissChanges(latestVersion);
     } else if (this.state === SyncState.Ready) {
-      this.triggerEvent('serverChangesets', changesets);
+      const [clientChangesets, serverChangesets] = transformChangesets(this.pendingChangesets, changesets, TransformType.Left);
+      this.pendingChangesets = clientChangesets;
+      this.triggerEvent('serverChangesets', serverChangesets);
       this.version += 1;
       this.triggerEvent('versionChange', { version: this.version });
+      this.offline.saveChangesets(this.pendingChangesets, this.version);
     }
   }
 

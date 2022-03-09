@@ -64,7 +64,7 @@ export default class CodeController {
           };
         }));
         
-        [changesets, beforeChangesets] = transformChangesets(changesets, beforeChangesets, TransformType.Right);
+        [changesets, beforeChangesets] = transformChangesets(changesets, beforeChangesets, TransformType.Left);
       }
 
       const model = new Model(code.content);
