@@ -69,8 +69,7 @@ export default class HistoryController {
       return;
     }
 
-    const list = await ChangesetService.getByRange(codeId, version, code.version);
-    const changesets = convertChangesets(list.map(item => ({ ...item, operations: item.getOperations() })));
+    const changesets = await ChangesetService.getByRange(codeId, version, code.version);
     const operations = invertOperations(getChangesetOperations(changesets));
 
     ctx.request.body.changesets = [new Changeset(

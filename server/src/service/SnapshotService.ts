@@ -23,10 +23,7 @@ export default class SnapshotService {
       return model;
     }
     const changesets = await ChangesetService.getByRange(codeId, baseVersion, version);
-    model.applyChangesets(changesets.map(changeset => ({
-      ...changeset,
-      operations: changeset.getOperations(),
-    })), ApplyType.Server);
+    model.applyChangesets(changesets, ApplyType.Server);
     return model;
   }
 }

@@ -9,6 +9,7 @@ import { SocketMessage, SocketMessageType } from "../../../common/type/message";
 import { convertChangesets } from "../../../common/utils/type";
 import { UserInfo } from "../../../common/type";
 import Offline from "./Offline";
+import { checkChangesets } from "../../../common/utils";
 
 export enum SyncState {
   Ready = 'ready',
@@ -80,6 +81,7 @@ export default class Sync extends EventEmitter {
     try {
       let changesets = await getChangesets(this.codeId, this.version, latestVersion);
       changesets = convertChangesets(changesets);
+      checkChangesets(changesets, this.version, latestVersion);
       this.pendingChangesets = transformChangesets(this.pendingChangesets, changesets, TransformType.Left)[0];
       this.triggerEvent('serverChangesets', changesets);
       this.version = latestVersion;
@@ -138,10 +140,12 @@ export default class Sync extends EventEmitter {
       return;
     }
 
+    checkChangesets(changesets);
+
     const latestVersion = changesets[changesets.length - 1].baseVersion! + 1;
     if (latestVersion > this.version + 1) {
       this.fetchMissChanges(latestVersion);
-    } else if (this.state === SyncState.Ready) {
+    } else if (latestVersion === this.version + 1 && changesets.length === 1 && this.state === SyncState.Ready) {
       const [clientChangesets, serverChangesets] = transformChangesets(this.pendingChangesets, changesets, TransformType.Left);
       this.pendingChangesets = clientChangesets;
       this.triggerEvent('serverChangesets', serverChangesets);

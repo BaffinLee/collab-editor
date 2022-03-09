@@ -56,14 +56,7 @@ export default class CodeController {
 
       let beforeChangesets: Changeset[] = [];
       if (baseVersion < code.version) {
-        const list = await ChangesetService.getByRange(codeId, baseVersion, code.version);
-        beforeChangesets = convertChangesets(list.map(item => {
-          return {
-            ...item,
-            operations: item.getOperations(),
-          };
-        }));
-        
+        beforeChangesets = await ChangesetService.getByRange(codeId, baseVersion, code.version);
         [changesets, beforeChangesets] = transformChangesets(changesets, beforeChangesets, TransformType.Left);
       }
 
@@ -119,8 +112,7 @@ export default class CodeController {
       return;
     }
 
-    const list = await ChangesetService.getByRange(codeId, baseVersion, targetVersion);
-    const changesets = convertChangesets(list.map(item => ({ ...item, operations: item.getOperations() })));
+    const changesets = await ChangesetService.getByRange(codeId, baseVersion, targetVersion);
     ctx.body = changesets;
   }
 }
