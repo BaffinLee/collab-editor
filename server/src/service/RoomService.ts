@@ -114,6 +114,7 @@ export default class RoomService {
       type: SocketMessageType.Heartbeat,
       data: {
         version: code.version,
+        metaVersion: code.metaVersion,
       },
     };
     client.ws.send(JSON.stringify([message]));

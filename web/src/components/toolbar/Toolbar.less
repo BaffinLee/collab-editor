@@ -7,11 +7,21 @@
   & > .container {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     height: 40px;
     width: 80%;
     max-width: 1200px;
     margin: 0 auto;
+  }
+
+  .left {
+    flex: 1 1 0;
+
+    .ant-select-selector {
+      border-color: #eee;
+      border-radius: 4px;
+      min-width: 80px;
+      height: 28px!important;
+    }
   }
 
   .btn {

@@ -11,8 +11,23 @@
     display: flex;
     align-items: center;
     flex-grow: 1;
-    font-size: 18px;
-    line-height: 18px;
+
+    .title {
+      padding: 0;
+      font-size: 18px;
+      line-height: 18px;
+      border: 0;
+      outline: 0;
+
+      &:hover {
+        outline: 1px dashed #e3e3e3;
+      }
+
+      &.disabled {
+        background-color: unset;
+        outline: 0;
+      }
+    }
 
     .desc {
       font-size: 12px;

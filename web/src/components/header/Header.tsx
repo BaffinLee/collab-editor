@@ -1,18 +1,39 @@
 import { PureComponent } from "react";
 import { RoomMemberInfo, UserInfo } from "../../../../common/type";
 import { SyncState } from "../../service/Sync";
+import classnames from "classnames";
 import "./Header.less";
 
 interface HeaderProps {
-  codeId: string;
   members: RoomMemberInfo[];
   user: UserInfo;
   syncState: SyncState;
+  title: string;
+  onUpdateTitle: (title: string) => void;
 }
 
-export default class Header extends PureComponent<HeaderProps> {
+interface HeaderState {
+  title: string;
+}
+
+export const DEFAULT_TITLE = 'Untitled code';
+
+export default class Header extends PureComponent<HeaderProps, HeaderState> {
+  constructor(props: HeaderProps) {
+    super(props);
+    this.state = {
+      title: props.title,
+    };
+  }
+
+  componentDidUpdate(prevProps: HeaderProps) {
+    if (this.props.title !== prevProps.title) {
+      this.setState({ title: this.props.title });
+    }
+  }
+
   render() {
-    const { codeId } = this.props;
+    const { onUpdateTitle, syncState } = this.props;
     let { members, user } = this.props;
     let map: { [userId: number]: boolean } = {};
     user = members.find(member => member.id === user.id) || user;
@@ -33,7 +54,21 @@ export default class Header extends PureComponent<HeaderProps> {
             </svg>
           </div>
           <div className="name">
-            <div className="title">{codeId}</div>
+            <input
+              type="text"
+              className={classnames('title', {
+                disabled: syncState === SyncState.Offline,
+              })}
+              value={this.state.title}
+              disabled={syncState === SyncState.Offline}
+              onChange={e => this.setState({ title: e.target.value })}
+              onBlur={e => {
+                this.setState({ title: e.target.value.trim() });
+                onUpdateTitle(e.target.value.trim());
+              }}
+              onKeyDown={e => e.code === 'Enter' && (e.target as HTMLInputElement).blur()}
+              placeholder={DEFAULT_TITLE}
+            />
             <div className="desc">{this.getSyncDesc()}</div>
           </div>
         </div>

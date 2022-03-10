@@ -1,8 +1,7 @@
 import Changeset from "../../../common/model/Changeset";
 import EventEmitter from "../../../common/utils/EventEmitter";
-import { getChangesets, uploadChangesets } from "./api";
+import { getChangesets, getCode, uploadChangesets } from "./api";
 import type IO from "./IO";
-import 'antd/lib/message/style/index.css';
 import message from 'antd/lib/message';
 import { transformChangesets, TransformType } from "../../../common/transform/transform";
 import { SocketMessage, SocketMessageType } from "../../../common/type/message";
@@ -29,6 +28,7 @@ export default class Sync extends EventEmitter {
   constructor(
     private io: IO,
     private version: number,
+    private meteVersion: number,
     private codeId: string,
     private user: UserInfo,
   ) {
@@ -133,6 +133,12 @@ export default class Sync extends EventEmitter {
         changesets.push(...convertChangesets(message.data.changesets));
       } else if (message.type === SocketMessageType.Heartbeat) {
         message.data.version! > this.version && this.fetchMissChanges(message.data.version!);
+        message.data.metaVersion! > this.meteVersion && this.fetchMeta();
+      } else if (message.type === SocketMessageType.MetaChange) {
+        if (message.data.metaVersion > this.meteVersion) {
+          this.meteVersion = message.data.metaVersion;
+          this.triggerEvent('metaChange', message.data);
+        }
       }
     });
 
@@ -172,5 +178,11 @@ export default class Sync extends EventEmitter {
       this.state = SyncState.Ready;
     }
     this.flush(true);
+  }
+
+  private async fetchMeta() {
+    const code = await getCode(this.codeId);
+    this.meteVersion = code.metaVersion;
+    this.triggerEvent('metaChange', code);
   }
 }

@@ -5,6 +5,9 @@ export interface CodeInfo {
   codeId: string;
   content: string;
   version: number;
+  metaVersion: number;
+  title: string;
+  language: string;
 }
 
 export interface SnapshotInfo {
@@ -22,4 +25,9 @@ export interface ChangesetInfo {
 export interface UploadChangesetResult {
   version: number;
   changesets: Changeset[];
+}
+
+export interface CodeMeta {
+  title: string;
+  language: string;
 }

@@ -12,6 +12,7 @@ interface MonacoEditorProps {
   model: Model;
   room: Room;
   user: UserInfo;
+  language: string;
   disabled?: boolean;
 }
 
@@ -35,6 +36,9 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
       this.editor?.updateOptions({
         readOnly: this.props.disabled,
       });
+    }
+    if (this.props.language !== prevProps.language) {
+      monaco.editor.setModelLanguage(this.editor!.getModel()!, this.props.language);
     }
   }
 
@@ -85,7 +89,7 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
   private initEditor(container: HTMLDivElement) {
     this.editor = monaco.editor.create(container, {
       value: this.props.content,
-      language: 'typescript',
+      language: this.props.language || 'typescript',
       lineNumbers: 'on',
       roundedSelection: false,
       scrollBeyondLastLine: false,

@@ -126,4 +126,42 @@ export default class CodeController {
     const changesets = await ChangesetService.getByRange(codeId, baseVersion, targetVersion);
     ctx.body = changesets;
   }
+
+  static async updateMeta(ctx: Context) {
+    let { title, language, memberId } = ctx.request.body as {
+      title?: string,
+      language?: string,
+      memberId: number,
+    };
+    title = title?.trim();
+    language = language?.trim();
+    memberId = Number(memberId);
+    const codeId = ctx.params.codeId;
+    if ((!title && !language) || !memberId || !codeId) {
+      ctx.status = 400;
+      return;
+    }
+
+    const code = await CodeEntity.findOne({ codeId });
+    if (!code) {
+      ctx.status = 400;
+      return;
+    }
+
+    code.title = title !== undefined ? title : code.title;
+    code.language = language !== undefined ? language : code.language;
+    code.metaVersion = code.metaVersion + 1;
+    await code.save();
+
+    RoomService.broadcastMessages([{
+      type: SocketMessageType.MetaChange,
+      data: {
+        title,
+        language,
+        metaVersion: code.metaVersion,
+      },
+    }], codeId, memberId);
+
+    ctx.body = {};
+  }
 }

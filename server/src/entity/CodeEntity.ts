@@ -21,6 +21,21 @@ export default class CodeEntity extends BaseEntity {
   @Column('text')
   content: string;
 
+  @Column({
+    default: '',
+  })
+  title: string;
+
+  @Column({
+    default: 'typescript',
+  })
+  language: string;
+
+  @Column({
+    default: 0,
+  })
+  metaVersion: number;
+
   @Column()
   version: number;
 

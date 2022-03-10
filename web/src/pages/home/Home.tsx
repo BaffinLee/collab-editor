@@ -2,13 +2,12 @@ import "../../../../common/utils/undo-event";
 import { createRef, PureComponent } from "react";
 import Model, { ApplyType } from "../../../../common/model/Model";
 import { ModelUpdateEvent, RoomMemberInfo, UserInfo } from "../../../../common/type";
-import Header from "../../components/header/Header";
+import Header, { DEFAULT_TITLE } from "../../components/header/Header";
 import MonacoDiffEditor from "../../components/monaco/MonacoDiffEditor";
 import MonacoEditor from "../../components/monaco/MonacoEditor";
-import { getCode, getMembers, getUser } from "../../service/api";
+import { getCode, getMembers, getUser, updateMeta } from "../../service/api";
 import IO from "../../service/IO";
 import Room from "../../service/Room";
-import 'antd/lib/skeleton/style/index.css';
 import Skeleton from 'antd/lib/skeleton';
 import "./Home.less";
 import Sync, { SyncState } from "../../service/Sync";
@@ -17,8 +16,9 @@ import UndoManager from "../../../../common/undo/UndoManager";
 import Operation from "../../../../common/operation/Operation";
 import Toolbar from "../../components/toolbar/Toolbar";
 import History from "../../components/history/History";
-import 'antd/lib/message/style/index.css';
 import message from 'antd/lib/message';
+import { CodeMeta } from "../../type";
+
 interface HomePageState {
   user: UserInfo | null;
   code: string;
@@ -32,11 +32,14 @@ interface HomePageState {
     content1: string,
     content2: string,
   } | null;
+  meta: CodeMeta;
 }
 
 interface HomePageProps {
 
 }
+
+const WEBSITE_NAME = 'Colla Editor';
 
 export default class HomePage extends PureComponent<HomePageProps, HomePageState> {
   private io?: IO;
@@ -58,6 +61,10 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
       canRedo: false,
       historyOpen: false,
       preview: null,
+      meta: {
+        title: '',
+        language: '',
+      },
     };
   }
 
@@ -72,7 +79,7 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
     if (location.pathname !== path) {
       history.replaceState({}, document.title, path);
     }
-    document.title = `${code.codeId} - Colla Editor`;
+    document.title = `${code.title || DEFAULT_TITLE} - ${WEBSITE_NAME}`;
 
     const model = new Model(code.content);
     this.model = model;
@@ -85,11 +92,12 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
     this.room = room;
     this.room.addEventListener('update', this.handleMembersUpdate);
 
-    const sync = new Sync(io, code.version, code.codeId, user);
+    const sync = new Sync(io, code.version, code.metaVersion, code.codeId, user);
     this.sync = sync;
     this.sync.addEventListener('serverChangesets', this.handleServerChangesets);
     this.sync.addEventListener('stateChange', this.handleSyncStateChange);
     this.sync.addEventListener('versionChange', this.handleSyncVersionChange);
+    this.sync.addEventListener('metaChange', this.handleMetaChange);
 
     const undoManager = new UndoManager();
     this.undoManager = undoManager;
@@ -101,6 +109,10 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
       code: code.content,
       codeId: code.codeId,
       members: room.getMembers(),
+      meta: {
+        title: code.title,
+        language: code.language,
+      },
     });
   }
 
@@ -111,6 +123,7 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
     this.sync?.addEventListener('stateChange', this.handleSyncStateChange);
     this.sync?.addEventListener('serverChangesets', this.handleServerChangesets);
     this.sync?.removeEventListener('versionChange', this.handleSyncVersionChange);
+    this.sync?.removeEventListener('metaChange', this.handleMetaChange);
     this.sync?.destroy();
     this.room?.addEventListener('update', this.handleMembersUpdate);
     this.io?.close();
@@ -118,15 +131,20 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
   }
 
   render() {
-    const { code, codeId, user, members, syncState, canRedo, canUndo, historyOpen, preview } = this.state;
+    const {
+      code, codeId, user, members, syncState,
+      canRedo, canUndo, historyOpen, preview,
+      meta,
+    } = this.state;
 
     return user ? (
       <div className="home-page">
         <Header
-          codeId={codeId}
           user={user}
           members={members}
           syncState={syncState}
+          title={meta.title}
+          onUpdateTitle={title => this.handleMetaChange({ title }, true)}
         />
         <Toolbar
           canUndo ={canUndo}
@@ -134,6 +152,9 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
           onUndo={() => this.undoManager?.undo()}
           onRedo={() => this.undoManager?.redo()}
           toggleHistory={this.toggleHistory}
+          syncState={syncState}
+          language={meta.language}
+          onUpdateLanguage={language => this.handleMetaChange({ language }, true)}
         />
         <div className="container">
           {!preview && (
@@ -142,6 +163,7 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
               model={this.model}
               room={this.room!}
               user={user}
+              language={meta.language}
               disabled={syncState === SyncState.Error}
             />
           )}
@@ -230,5 +252,18 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
 
   private handleSyncVersionChange = () => {
     this.historyRef.current?.fetchList(true);
+  }
+
+  private handleMetaChange = async (meta: Partial<CodeMeta>, sync?: boolean) => {
+    this.setState({
+      meta: {
+        ...this.state.meta,
+        ...meta,
+      },
+    });
+    if (meta.title !== undefined) {
+      document.title = `${meta.title || DEFAULT_TITLE} - ${WEBSITE_NAME}`;
+    }
+    sync && await updateMeta(this.state.codeId, this.state.user!.memberId, meta);
   }
 }

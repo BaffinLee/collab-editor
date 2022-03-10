@@ -1,8 +1,7 @@
 import axios from 'axios';
-import dayjs from 'dayjs';
 import Changeset from '../../../common/model/Changeset';
 import { UserInfo } from '../../../common/type';
-import { CodeInfo, SnapshotInfo, UploadChangesetResult } from '../type';
+import { CodeInfo, CodeMeta, SnapshotInfo, UploadChangesetResult } from '../type';
 
 axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? '/api' : '';
 
@@ -12,8 +11,16 @@ export async function getUser() {
 }
 
 export async function getCode(codeId?: string) {
-  codeId = codeId || location.pathname.split('/')[1] || dayjs().format('YYYYMMDD');
+  codeId = codeId || location.pathname.split('/')[1] || '';
   const res = await axios.get<CodeInfo>(`/code/${codeId}`);
+  return res.data;
+}
+
+export async function updateMeta(codeId: string, memberId: number, meta: Partial<CodeMeta>) {
+  const res = await axios.post<CodeInfo>(`/code/${codeId}/meta`, {
+    ...meta,
+    memberId,
+  });
   return res.data;
 }
 

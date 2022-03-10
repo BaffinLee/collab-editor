@@ -19,6 +19,11 @@ export default [
     handler: CodeController.getMembers,
   },
   {
+    path: '/code/:codeId/meta',
+    method: 'post',
+    handler: CodeController.updateMeta,
+  },
+  {
     path: '/changeset/:codeId',
     method: 'get',
     handler: CodeController.getChangeset,
