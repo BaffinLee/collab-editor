@@ -10,12 +10,16 @@ interface ClientInfo {
   userId: number;
   memberId: number;
   ws: WebSocket;
+  lastTime: Date;
 }
+
+const HEALTH_TIME = 60 * 1000;
 
 export default class RoomService {
   static connectionMap: {
     [codeId: string]: ClientInfo[];
   } = {};
+  static healthCheckTimer: NodeJS.Timer | null = null;
 
   static handleConnection(ws: WebSocket, req: IncomingMessage) {
     const url = new URL(req.url || '', 'http://127.0.0.1');
@@ -32,6 +36,7 @@ export default class RoomService {
       userId,
       memberId,
       ws,
+      lastTime: new Date(),
     };
     this.connectionMap[codeId] = this.connectionMap[codeId] || [];
     this.connectionMap[codeId].push(client);
@@ -39,6 +44,7 @@ export default class RoomService {
     ws.on('error', event => {
       console.error('ws error', event.message);
       this.handleClose(client);
+      ws.close();
     });
     ws.on('close', () => {
       this.handleClose(client);
@@ -50,11 +56,13 @@ export default class RoomService {
       } catch (error) {
         // do nothing
       }
+      client.lastTime = new Date();
     });
 
     ws.send('1');
 
     this.handleRoomChange(client, RoomChangeType.UserEnter);
+    this.startHealthCheck();
   }
 
   static broadcastMessages(messages: SocketMessage[], codeId: string, excludeMember?: number) {
@@ -130,5 +138,21 @@ export default class RoomService {
         ],
       },
     }], client.codeId, client.memberId);
+  }
+
+  private static startHealthCheck() {
+    if (this.healthCheckTimer) return;
+    this.healthCheckTimer = setInterval(() => {
+      Object.keys(this.connectionMap).forEach(codeId => {
+        const list = this.connectionMap[codeId];
+        for (let i = list.length - 1; i >= 0; i--) {
+          const item = list[i];
+          if (item.lastTime.getTime() + HEALTH_TIME < (new Date()).getTime()) {
+            this.handleClose(item);
+            item.ws.close();
+          }
+        }
+      });
+    }, HEALTH_TIME);
   }
 }
