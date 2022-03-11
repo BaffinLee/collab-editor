@@ -137,7 +137,7 @@ export default class CodeController {
     language = language?.trim();
     memberId = Number(memberId);
     const codeId = ctx.params.codeId;
-    if ((!title && !language) || !memberId || !codeId) {
+    if ((title === undefined && language === undefined) || !memberId || !codeId) {
       ctx.status = 400;
       return;
     }

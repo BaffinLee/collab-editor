@@ -2,6 +2,7 @@ import { PureComponent } from "react";
 import { RoomMemberInfo, UserInfo } from "../../../../common/type";
 import { SyncState } from "../../service/Sync";
 import classnames from "classnames";
+import Tooltip from 'antd/lib/tooltip';
 import "./Header.less";
 
 interface HeaderProps {
@@ -74,16 +75,20 @@ export default class Header extends PureComponent<HeaderProps, HeaderState> {
         </div>
         <div className="right">
           {members.map(member => (
-            <div className="people" title={member.name} key={member.id}>
-              <img src={member.avatar} alt="people" />
-              <div className="dot" style={{ backgroundColor: member.color }}></div>
-            </div>
+            <Tooltip title={member.name} key={member.id}>
+              <div className="people">
+                <img src={member.avatar} alt="people" />
+                <div className="dot" style={{ backgroundColor: member.color }}></div>
+              </div>
+            </Tooltip>
           ))}
           {members.length !== 0 && <div className="divider"></div>}
-          <div className="people" title={user.name}>
-            <img src={user.avatar} alt="people" />
-            <div className="dot" style={{ backgroundColor: (user as RoomMemberInfo).color }}></div>
-          </div>
+          <Tooltip title={user.name} placement="bottomRight">
+            <div className="people">
+              <img src={user.avatar} alt="people" />
+              <div className="dot" style={{ backgroundColor: (user as RoomMemberInfo).color }}></div>
+            </div>
+          </Tooltip>
         </div>
       </div>
     );

@@ -13,14 +13,17 @@
     flex-grow: 1;
 
     .title {
-      padding: 0;
-      font-size: 18px;
+      padding: 2px 2px 2px 0;
+      font-size: 16px;
       line-height: 18px;
       border: 0;
       outline: 0;
+      border-radius: 4px;
 
-      &:hover {
-        outline: 1px dashed #e3e3e3;
+      &:focus {
+        padding-left: 2px;
+        margin-left: -2px;
+        outline: 1px solid #40a9ff;
       }
 
       &.disabled {
@@ -67,7 +70,7 @@
     position: relative;
     background-color: #e1e1e1;
     border-radius: 50%;
-    margin-right: -6px;
+    margin-right: -5px;
     line-height: 0;
 
     &:last-child {
@@ -78,6 +81,8 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
+      border: 1px solid #fff;
+      box-sizing: border-box;
     }
 
     .dot {

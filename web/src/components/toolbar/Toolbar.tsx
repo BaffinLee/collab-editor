@@ -6,6 +6,7 @@ import HistorySVG from "../../static/image/history.svg?component";
 import classnames from 'classnames';
 import { SyncState } from "../../service/Sync";
 import Select from 'antd/lib/select';
+import Tooltip from 'antd/lib/tooltip';
 import type { BaseSelectRef } from 'rc-select';
 
 interface ToolbarProps {
@@ -34,8 +35,6 @@ export default class Toolbar extends PureComponent<ToolbarProps> {
 
   render() {
     const {
-      canRedo, canUndo, onRedo,
-      onUndo, toggleHistory,
       syncState, language, onUpdateLanguage,
     } = this.props;
 
@@ -64,35 +63,51 @@ export default class Toolbar extends PureComponent<ToolbarProps> {
               ))}
             </Select>
           </div>
-          <div
-            className={classnames('btn', {
-              disabled: !canUndo,
-            })}
-            onClick={onUndo}
-            title="undo"
-          >
-            <UndoSVG />
-          </div>
-          <div
-            className={classnames('btn', {
-              disabled: !canRedo,
-            })}
-            onClick={onRedo}
-            title="redo"
-          >
-            <RedoSVG />
-          </div>
-          <div
-            className={classnames('btn', {
-              disabled: syncState === SyncState.Offline,
-            })}
-            onClick={toggleHistory}
-            title="history"
-          >
-            <HistorySVG />
-          </div>
+          {this.getButtons().map(button => (
+            <Tooltip
+              title={button.title}
+              key={button.title}
+            >
+              <div
+                className={classnames('btn', {
+                  disabled: button.disabled,
+                })}
+                onClick={button.onClick}
+              >
+                <button.icon />
+              </div>
+            </Tooltip>
+          ))}
         </div>
       </div>
     );
+  }
+
+  private getButtons() {
+    const {
+      canRedo, canUndo, onRedo,
+      onUndo, toggleHistory,
+      syncState,
+    } = this.props;
+    return [
+      {
+        title: 'undo',
+        onClick: onUndo,
+        disabled: !canUndo,
+        icon: UndoSVG,
+      },
+      {
+        title: 'redo',
+        onClick: onRedo,
+        disabled: !canRedo,
+        icon: RedoSVG,
+      },
+      {
+        title: 'history',
+        onClick: toggleHistory,
+        disabled: syncState === SyncState.Offline,
+        icon: HistorySVG,
+      },
+    ];
   }
 }

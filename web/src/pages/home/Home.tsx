@@ -18,6 +18,8 @@ import Toolbar from "../../components/toolbar/Toolbar";
 import History from "../../components/history/History";
 import message from 'antd/lib/message';
 import { CodeMeta } from "../../type";
+import GithubSVG from "../../static/image/github.svg?component";
+import Tooltip from 'antd/lib/tooltip';
 
 interface HomePageState {
   user: UserInfo | null;
@@ -186,6 +188,13 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
               ref={this.historyRef}
             />
           )}
+        </div>
+        <div className="footer">
+          <Tooltip title="fork me at github" placement="right">
+            <a href="https://github.com/BaffinLee/colla-editor" target="_blank">
+              <GithubSVG />
+            </a>
+          </Tooltip>
         </div>
       </div>
     ) : (
