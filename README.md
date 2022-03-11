@@ -10,6 +10,8 @@
 
 [https://colla-editor.herokuapp.com/](https://colla-editor.herokuapp.com/)
 
+![Screen Shot](https://raw.githubusercontent.com/BaffinLee/colla-editor/main/web/src/static/image/screenshot.gif)
+
 ## Features
 
 - Collaborative coding with all the conflicts auto merged.
