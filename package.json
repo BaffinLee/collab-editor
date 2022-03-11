@@ -14,7 +14,16 @@
   "engines": {
     "node": "14.x"
   },
-  "license": "ISC",
+  "license": "MIT",
+  "bug": {
+    "url": "https://github.com/BaffinLee/colla-editor/issues"
+  },
+  "homepage": "https://github.com/BaffinLee/colla-editor",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:BaffinLee/colla-editor.git"
+  },
+  "author": "Baffin Lee <BaffinLee@gmail.com>",
   "devDependencies": {
     "@atao60/fse-cli": "^0.1.7",
     "@types/jest": "^27.4.1",
