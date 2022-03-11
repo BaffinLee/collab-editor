@@ -83,7 +83,7 @@ export default class Header extends PureComponent<HeaderProps, HeaderState> {
             </Tooltip>
           ))}
           {members.length !== 0 && <div className="divider"></div>}
-          <Tooltip title={user.name} placement="bottomRight">
+          <Tooltip title={user.name + ' (me)'} placement="bottomRight">
             <div className="people">
               <img src={user.avatar} alt="people" />
               <div className="dot" style={{ backgroundColor: (user as RoomMemberInfo).color }}></div>

@@ -6,6 +6,8 @@ import Operation, { OperationType } from "../../../../common/operation/Operation
 import { ModelUpdateEvent, RoomMemberInfo, UserInfo } from "../../../../common/type";
 import Room from "../../service/Room";
 import MonacoWidget from "./MonacoWidget";
+import { transformCursor } from "../../../../common/transform/transform";
+import { getChangesetOperations } from "../../../../common/utils";
 
 interface MonacoEditorProps {
   content: string;
@@ -76,7 +78,18 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
         };
       }
     });
-    this.props.room.updateMemberCursor(memberCursorMap);
+    const members: RoomMemberInfo[] = this.props.room.getMembers().map(member => {
+      const offset = memberCursorMap[member.memberId]
+        ? memberCursorMap[member.memberId].rangeStart
+        : (member.cursor && transformCursor(getChangesetOperations(data.changesets), member.cursor.rangeStart));
+      return {
+        ...member,
+        cursor: offset !== undefined
+          ? { rangeStart: offset, rangeEnd: offset }
+          : undefined,
+      };
+    });
+    this.props.room.updateMembers(members);
     this.isApplying = false;
   }
 
@@ -163,6 +176,7 @@ export default class MonacoEditor extends PureComponent<MonacoEditorProps> {
       cursor.setPosition(
         model.getPositionAt(member.cursor.rangeStart),
         member.cursor.rangeStart,
+        this.isApplying,
       );
       this.cursorMap[member.memberId] = cursor;
       oldMap[member.memberId]

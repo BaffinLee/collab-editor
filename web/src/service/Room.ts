@@ -44,15 +44,8 @@ export default class Room extends EventEmitter {
     }]);
   }
 
-  updateMemberCursor(map: { [memberId: number]: { rangeStart: number }}) {
-    Object.keys(map).forEach(id => {
-      const memberId = +id;
-      const { rangeStart } = map[memberId];
-      const index = this.members.findIndex(member => member.memberId === memberId);
-      if (index === -1) return;
-      this.members[index].cursor = { rangeStart, rangeEnd: rangeStart };
-    });
-    this.members = [...this.members];
+  updateMembers(members: RoomMemberInfo[]) {
+    this.members = members;
     this.triggerEvent('update', this.members);
   }
 

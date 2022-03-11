@@ -57,11 +57,11 @@ export default class MonacoWidget {
     };
   }
 
-  setPosition(position: Position, offset: number) {
+  setPosition(position: Position, offset: number, doNotOpen?: boolean) {
     const changed = this.offset !== offset;
     this.position = position;
     this.offset = offset;
-    changed && this.openFlag();
+    changed && !doNotOpen && this.openFlag();
   }
 
   private openFlag() {
