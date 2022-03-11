@@ -3,6 +3,7 @@
 [![codecov](https://codecov.io/gh/BaffinLee/colla-editor/branch/main/graph/badge.svg?token=FboFvXhrVG)](https://codecov.io/gh/BaffinLee/colla-editor)
 [![GitHub issues](https://img.shields.io/github/issues/BaffinLee/colla-editor.svg)](https://github.com/BaffinLee/colla-editor/issues)
 [![license](https://img.shields.io/github/license/baffinlee/colla-editor.svg)](https://github.com/baffinlee/colla-editor)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBaffinLee%2Fcolla-editor.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FBaffinLee%2Fcolla-editor?ref=badge_shield)
 
 > Collaborative coding editor base on [monaco](https://microsoft.github.io/monaco-editor/index.html) and [OT algorithm](https://en.wikipedia.org/wiki/Operational_transformation)
 
@@ -60,3 +61,7 @@ yarn dev:web
 ```bash
 yarn test
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBaffinLee%2Fcolla-editor.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FBaffinLee%2Fcolla-editor?ref=badge_large)
