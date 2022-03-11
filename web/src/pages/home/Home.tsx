@@ -209,9 +209,6 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
   private toggleHistory = () => {
     if (this.state.historyOpen) {
       this.setState({ preview: null });
-    } else {
-      const el = document.querySelector('.monaco-editor-container') as HTMLDivElement;
-      el.style.width = '100px';
     }
     this.setState({ historyOpen: !this.state.historyOpen });
   }
