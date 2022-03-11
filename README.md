@@ -40,12 +40,13 @@ cd server && yarn install
 
 ## Run the app
 
-```base
+```bash
+# build frontend asserts
 yarn build
 
+# start backend server and host frontend asserts
+# http://localhost:3123
 yarn start
-
-# server is running at http://localhost:3123
 ```
 
 ## Develop
