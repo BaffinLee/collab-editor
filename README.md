@@ -1,5 +1,9 @@
 # Colla Editor
 
+[![codecov](https://codecov.io/gh/BaffinLee/colla-editor/branch/main/graph/badge.svg?token=FboFvXhrVG)](https://codecov.io/gh/BaffinLee/colla-editor)
+[![GitHub issues](https://img.shields.io/github/issues/BaffinLee/colla-editor.svg)](https://github.com/BaffinLee/colla-editor/issues)
+[![license](https://img.shields.io/github/license/baffinlee/colla-editor.svg)](https://github.com/baffinlee/colla-editor)
+
 > Collaborative coding editor base on [monaco](https://microsoft.github.io/monaco-editor/index.html) and [OT algorithm](https://en.wikipedia.org/wiki/Operational_transformation)
 
 ## Try it out
@@ -19,7 +23,7 @@
 
 ## Tips
 
-This codebase is just for fun and learning OT algorithm. **DO NOT USE ANY CODE IN PRODUCTION ENVIRONMENT.**
+This codebase is just for fun and learning OT algorithm. **BE CAREFUL WHEN USING IN PRODUCTION ENVIRONMENT.**
 
 ## Install
 
