@@ -66,6 +66,6 @@ export async function uploadChangesets(codeId: string, memberId: number, baseVer
 }
 
 export async function getMembers(codeId: string) {
-  const res = await axios.get<UserInfo[]>(`/code/${codeId}/members`);
+  const res = await axios.get<{ members: UserInfo[], version: number }>(`/code/${codeId}/members`);
   return res.data;
 }

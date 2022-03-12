@@ -25,6 +25,7 @@ export interface HeartbeatMessage {
   data: {
     version?: number;
     metaVersion?: number;
+    roomVersion?: number;
   };
 }
 
@@ -42,6 +43,7 @@ export interface RoomChangeMessage {
       type: RoomChangeType;
       user: UserInfo;
     }[];
+    roomVersion?: number;
   };
 }
 

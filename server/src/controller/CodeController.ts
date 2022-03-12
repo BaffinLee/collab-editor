@@ -23,7 +23,11 @@ export default class CodeController {
   static async getMembers(ctx: Context) {
     const codeId = ctx.params.codeId || '';
     const members = await RoomService.getRoomMembers(codeId);
-    ctx.body = members;
+    const version = await RoomService.getRoomVersion(codeId);
+    ctx.body = {
+      members,
+      version,
+    };
   }
 
   static async uploadChangeset(ctx: Context) {

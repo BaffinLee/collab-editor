@@ -5,7 +5,7 @@ import { ModelUpdateEvent, RoomMemberInfo, UserInfo } from "../../../../common/t
 import Header, { DEFAULT_TITLE } from "../../components/header/Header";
 import MonacoDiffEditor from "../../components/monaco/MonacoDiffEditor";
 import MonacoEditor from "../../components/monaco/MonacoEditor";
-import { getCode, getMembers, getUser, updateMeta } from "../../service/api";
+import { getCode, getUser, updateMeta } from "../../service/api";
 import IO from "../../service/IO";
 import Room from "../../service/Room";
 import Skeleton from 'antd/lib/skeleton';
@@ -74,7 +74,6 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
     // fetch data
     const user = await getUser();
     const code = await getCode();
-    const members = await getMembers(code.codeId);
 
     // set url & title
     const path = `/${code.codeId}`;
@@ -90,7 +89,7 @@ export default class HomePage extends PureComponent<HomePageProps, HomePageState
     const io = new IO(user, code);
     this.io = io;
 
-    const room = new Room(members, io, user);
+    const room = new Room(code.codeId, io, user);
     this.room = room;
     this.room.addEventListener('update', this.handleMembersUpdate);
 

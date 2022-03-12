@@ -17,7 +17,10 @@ const HEALTH_TIME = 60 * 1000;
 
 export default class RoomService {
   static connectionMap: {
-    [codeId: string]: ClientInfo[];
+    [codeId: string]: {
+      clients: ClientInfo[];
+      version: number;
+    };
   } = {};
   static healthCheckTimer: NodeJS.Timer | null = null;
 
@@ -38,8 +41,9 @@ export default class RoomService {
       ws,
       lastTime: new Date(),
     };
-    this.connectionMap[codeId] = this.connectionMap[codeId] || [];
-    this.connectionMap[codeId].push(client);
+    this.connectionMap[codeId] = this.connectionMap[codeId] || { clients: [], version: 0 };
+    this.connectionMap[codeId].clients.push(client);
+    this.connectionMap[codeId].version += 1;
 
     ws.on('error', event => {
       console.error('ws error', event.message);
@@ -66,7 +70,7 @@ export default class RoomService {
   }
 
   static broadcastMessages(messages: SocketMessage[], codeId: string, excludeMember?: number) {
-    const clients = this.connectionMap[codeId] || [];
+    const clients = this.connectionMap[codeId]?.clients || [];
     clients.forEach(client => {
       if (client.ws.readyState !== WebSocketState.Ready || client.memberId === excludeMember) {
         return;
@@ -77,7 +81,7 @@ export default class RoomService {
 
   static async getRoomMembers(codeId: string) {
     const memberList: UserInfo[] = [];
-    const arr = this.connectionMap[codeId] || [];
+    const arr = this.connectionMap[codeId]?.clients || [];
     for (let i = 0; i < arr.length; i++) {
       const user = await UserEntity.findOne(arr[i].userId);
       user && memberList.push({ ...user, memberId: arr[i].memberId });
@@ -85,9 +89,14 @@ export default class RoomService {
     return memberList;
   }
 
+  static getRoomVersion(codeId: string) {
+    return this.connectionMap[codeId]?.version || 0;
+  }
+
   private static handleClose(client: ClientInfo) {
-    if ((this.connectionMap[client.codeId] || []).find(item => item.memberId === client.memberId)) {
-      this.connectionMap[client.codeId] = (this.connectionMap[client.codeId] || []).filter(item => item.memberId !== client.memberId);
+    if ((this.connectionMap[client.codeId]?.clients || []).find(item => item.memberId === client.memberId)) {
+      this.connectionMap[client.codeId].clients = this.connectionMap[client.codeId].clients.filter(item => item.memberId !== client.memberId);
+      this.connectionMap[client.codeId].version += 1;
       this.handleRoomChange(client, RoomChangeType.UserLeave);
     }
   }
@@ -115,6 +124,7 @@ export default class RoomService {
       data: {
         version: code.version,
         metaVersion: code.metaVersion,
+        roomVersion: this.connectionMap[client.codeId]?.version || 0,
       },
     };
     client.ws.send(JSON.stringify([message]));
@@ -137,6 +147,7 @@ export default class RoomService {
             },
           },
         ],
+        roomVersion: this.getRoomVersion(client.codeId),
       },
     }], client.codeId, client.memberId);
   }
@@ -145,7 +156,7 @@ export default class RoomService {
     if (this.healthCheckTimer) return;
     this.healthCheckTimer = setInterval(() => {
       Object.keys(this.connectionMap).forEach(codeId => {
-        const list = this.connectionMap[codeId];
+        const list = this.connectionMap[codeId].clients;
         for (let i = list.length - 1; i >= 0; i--) {
           const item = list[i];
           if (item.lastTime.getTime() + HEALTH_TIME < (new Date()).getTime()) {

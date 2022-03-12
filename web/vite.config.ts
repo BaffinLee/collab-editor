@@ -20,6 +20,10 @@ export default defineConfig({
         ws: true,
       },
     },
+    // config for github.dev port forward env
+    hmr: process.env.GITHUB_CODESPACE_TOKEN ? {
+      clientPort: 443,
+    } : undefined,
   },
   plugins: [
     react(),
