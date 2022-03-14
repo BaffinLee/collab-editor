@@ -20,7 +20,7 @@ export default class RoomService {
     [codeId: string]: {
       clients: ClientInfo[];
       version: number;
-    };
+    } | undefined;
   } = {};
   static healthCheckTimer: NodeJS.Timer | null = null;
 
@@ -42,8 +42,8 @@ export default class RoomService {
       lastTime: new Date(),
     };
     this.connectionMap[codeId] = this.connectionMap[codeId] || { clients: [], version: 0 };
-    this.connectionMap[codeId].clients.push(client);
-    this.connectionMap[codeId].version += 1;
+    this.connectionMap[codeId]!.clients.push(client);
+    this.connectionMap[codeId]!.version += 1;
 
     ws.on('error', event => {
       console.error('ws error', event.message);
@@ -95,9 +95,12 @@ export default class RoomService {
 
   private static handleClose(client: ClientInfo) {
     if ((this.connectionMap[client.codeId]?.clients || []).find(item => item.memberId === client.memberId)) {
-      this.connectionMap[client.codeId].clients = this.connectionMap[client.codeId].clients.filter(item => item.memberId !== client.memberId);
-      this.connectionMap[client.codeId].version += 1;
+      this.connectionMap[client.codeId]!.clients = this.connectionMap[client.codeId]!.clients.filter(item => item.memberId !== client.memberId);
+      this.connectionMap[client.codeId]!.version += 1;
       this.handleRoomChange(client, RoomChangeType.UserLeave);
+      if (this.connectionMap[client.codeId]!.clients.length === 0) {
+        delete this.connectionMap[client.codeId];
+      }
     }
   }
 
@@ -156,7 +159,7 @@ export default class RoomService {
     if (this.healthCheckTimer) return;
     this.healthCheckTimer = setInterval(() => {
       Object.keys(this.connectionMap).forEach(codeId => {
-        const list = this.connectionMap[codeId].clients;
+        const list = this.connectionMap[codeId]!.clients;
         for (let i = list.length - 1; i >= 0; i--) {
           const item = list[i];
           if (item.lastTime.getTime() + HEALTH_TIME < (new Date()).getTime()) {
