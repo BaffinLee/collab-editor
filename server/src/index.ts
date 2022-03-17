@@ -22,8 +22,8 @@ routes.forEach(route => {
 
 app.use(serve('public'));
 app.use(bodyParser());
+app.use(cors({ credentials: true }));
 app.use(router.routes());
-app.use(cors());
 app.use(HomeController.showHomePage);
 
 createConnection().then(() => {

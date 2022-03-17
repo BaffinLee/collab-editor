@@ -2,6 +2,7 @@ import { UserInfo, WebSocketState } from '../../../common/type';
 import { SocketMessage, SocketMessageType } from '../../../common/type/message';
 import EventEmitter from '../../../common/utils/EventEmitter';
 import { CodeInfo } from '../type';
+import { API_HOST } from './api';
 
 const HEARTBEAT_TIME = 30;
 const MAX_RETRY_TIME = 3;
@@ -47,7 +48,7 @@ export default class IO extends EventEmitter {
 
   private initWs() {
     const params = `codeId=${encodeURIComponent(this.code.codeId)}&userId=${this.user.id}&memberId=${this.user.memberId}`;
-    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/socket?${params}`);
+    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${API_HOST}/socket?${params}`);
 
     ws.addEventListener('open', this.handleOpen);
     ws.addEventListener('message', this.handleMessage);
