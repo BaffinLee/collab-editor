@@ -3,7 +3,9 @@ import Changeset from '../../../common/model/Changeset';
 import { UserInfo } from '../../../common/type';
 import { CodeInfo, CodeMeta, SnapshotInfo, UploadChangesetResult } from '../type';
 
-axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? '/api' : '';
+export const API_HOST = import.meta.env.VITE_API_HOST || location.host;
+
+axios.defaults.baseURL = `${location.protocol}//${API_HOST}${process.env.NODE_ENV === 'development' ? '/api' : ''}`;
 
 export async function getUser() {
   const res = await axios.get<UserInfo>('/user');

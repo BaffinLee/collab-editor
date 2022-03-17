@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/github/license/baffinlee/colla-editor.svg)](https://github.com/baffinlee/colla-editor)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBaffinLee%2Fcolla-editor.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FBaffinLee%2Fcolla-editor?ref=badge_shield)
 
-> Collaborative coding editor base on [monaco](https://microsoft.github.io/monaco-editor/index.html) and [OT algorithm](https://en.wikipedia.org/wiki/Operational_transformation)
+> Collaborative coding editor base on [Monaco Editor](https://microsoft.github.io/monaco-editor/index.html) and [OT algorithm](https://en.wikipedia.org/wiki/Operational_transformation)
 
 ## Try it out
 
