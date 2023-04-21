@@ -1,4 +1,4 @@
-# Colla Editor
+# Collab Editor
 
 [![codecov](https://codecov.io/gh/BaffinLee/colla-editor/branch/main/graph/badge.svg?token=FboFvXhrVG)](https://codecov.io/gh/BaffinLee/colla-editor)
 [![GitHub issues](https://img.shields.io/github/issues/BaffinLee/colla-editor.svg)](https://github.com/BaffinLee/colla-editor/issues)
@@ -9,7 +9,7 @@
 
 ## Try it out
 
-[https://colla-editor.herokuapp.com/](https://colla-editor.herokuapp.com/)
+[https://collab-editor-7fqm.onrender.com/](https://collab-editor-7fqm.onrender.com/)
 
 ![Screen Shot](https://raw.githubusercontent.com/BaffinLee/colla-editor/main/web/src/static/image/screenshot.gif)
 
