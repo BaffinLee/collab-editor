@@ -7,13 +7,12 @@
     "start": "cd server && npm run start",
     "build": "cd web && npm run build && fse remove ../server/public && fse copy --quiet dist ../server/public",
     "prebuild": "yarn && cd server && yarn && cd ../web && yarn",
+    "build:web": "cd web && npm run build",
+    "build:server": "cd server && npm run build",
     "dev:web": "cd web && npm run dev",
     "dev:server": "cd server && npm run dev",
     "test": "jest --coverage",
     "coverage": "codecov"
-  },
-  "engines": {
-    "node": "14.x"
   },
   "license": "MIT",
   "bug": {
