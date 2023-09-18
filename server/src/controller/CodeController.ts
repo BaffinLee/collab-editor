@@ -11,8 +11,8 @@ import Model, { ApplyType } from '../../../common/model/Model';
 import { getLock, releaseLock } from '../utils/lock';
 import { SocketMessageType } from '../../../common/type/message';
 import { getChangesetOperations } from '../../../common/utils';
-import { getManager } from 'typeorm';
 import ChangesetEntity from '../entity/ChangesetEntity';
+import { getDataSource } from '../datasource';
 
 export default class CodeController {
   static async get(ctx: Context) {
@@ -33,7 +33,7 @@ export default class CodeController {
   static async uploadChangeset(ctx: Context) {
     const userId = Number(ctx.cookies.get('user_id'));
     const codeId = ctx.params.codeId;
-    let code = await CodeEntity.findOne({ codeId });
+    let code = await CodeEntity.findOneBy({ codeId });
     if (!userId || !codeId || !code) {
       ctx.status = 403;
       return;
@@ -57,7 +57,7 @@ export default class CodeController {
     await getLock(codeId);
 
     try {
-      code = await CodeEntity.findOne({ codeId }) as CodeEntity;
+      code = await CodeEntity.findOneBy({ codeId }) as CodeEntity;
 
       const codeVersion = code.version;
       let beforeChangesets: Changeset[] = [];
@@ -71,7 +71,7 @@ export default class CodeController {
 
       const operations = getChangesetOperations(changesets);
 
-      await getManager().transaction(async transactionalEntityManager => {
+      await getDataSource().transaction(async transactionalEntityManager => {
         await CodeService.save(
           model.getContent(),
           codeVersion + 1,
@@ -146,7 +146,7 @@ export default class CodeController {
       return;
     }
 
-    const code = await CodeEntity.findOne({ codeId });
+    const code = await CodeEntity.findOneBy({ codeId });
     if (!code) {
       ctx.status = 400;
       return;

@@ -29,7 +29,7 @@ export default class HistoryController {
     const list: {}[] = [];
     for (let i = 0; i < changesets.length; i++) {
       const userId = changesets[i].userId;
-      const user = userMap[userId] || await UserEntity.findOne(userId) || {};
+      const user = userMap[userId] || await UserEntity.findOneBy({ id: userId }) || {};
       userMap[userId] = user;
       list.push({
         ...changesets[i],
@@ -63,7 +63,7 @@ export default class HistoryController {
       return;
     }
 
-    const code = await CodeEntity.findOne({ codeId });
+    const code = await CodeEntity.findOneBy({ codeId });
     if (!code || version >= code.version) {
       ctx.status = 400;
       return;

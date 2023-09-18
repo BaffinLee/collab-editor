@@ -4,7 +4,7 @@ import md5 from "blueimp-md5"
 
 export default class UserService {
   static async getOrCreate(id: number) {
-    let user = await UserEntity.findOne(id);
+    let user = await UserEntity.findOneBy({ id });
     if (!user) {
       user = new UserEntity();
       user.name = faker.name.findName();
