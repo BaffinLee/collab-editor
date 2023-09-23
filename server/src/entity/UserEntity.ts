@@ -10,19 +10,19 @@ import {
 @Entity()
 export default class UserEntity extends BaseEntity {
 
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'int' })
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   avatar: string;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'date' })
   updateTime: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'date' })
   createTime: Date;
 
 }

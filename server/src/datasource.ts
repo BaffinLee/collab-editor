@@ -6,7 +6,7 @@ import UserEntity from "./entity/UserEntity";
 
 let AppDataSource: DataSource | null = null;
 
-export function getDataSource(options?: Partial<DataSourceOptions & { type: 'sqlite' }>) {
+export async function getDataSource(options?: Partial<DataSourceOptions & { type: 'sqlite' }>) {
   if (!AppDataSource) {
     AppDataSource = new DataSource({
       type: 'sqlite',
@@ -16,6 +16,7 @@ export function getDataSource(options?: Partial<DataSourceOptions & { type: 'sql
       logging: false,
       ...options,
     });
+    await AppDataSource.initialize();
   }
   return AppDataSource;
 }

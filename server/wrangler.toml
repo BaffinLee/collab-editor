@@ -3,6 +3,11 @@ main = "src/index-worker.ts"
 compatibility_date = "2023-06-11"
 workers_dev= true
 
+[dev]
+ip = "localhost"
+port = 3123
+local_protocol = "http"
+
 # # Environment variables
 # [vars]
 # name = "value"
@@ -39,8 +44,7 @@ database_id = "22b98bc9-da38-49e8-8f18-e20bbbea78e7"
 # name = "my-queue"
 # zone_id = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
 
-# [env.production]
-# MY_VARIABLE = "production_value"
+[env.production]
 DEV = "false"
 
 # [env.staging]

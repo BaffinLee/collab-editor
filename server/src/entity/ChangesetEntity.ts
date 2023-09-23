@@ -14,28 +14,28 @@ import { convertOperations } from '../../../common/utils/type';
 @Index(['codeId', 'baseVersion'], { unique: true })
 export default class ChangesetEntity extends BaseEntity {
 
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'int'})
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar'})
   codeId: string;
 
   @Column('text')
   operations: string;
 
-  @Column()
+  @Column({ type: 'int'})
   baseVersion: number;
 
-  @Column()
+  @Column({ type: 'int'})
   userId: number;
 
-  @Column()
+  @Column({ type: 'int'})
   memberId: number;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'date'})
   updateTime: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'date'})
   createTime: Date;
 
   getOperations(): Operation[] {

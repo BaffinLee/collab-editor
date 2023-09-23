@@ -25,3 +25,4 @@ dist-ssr
 
 database.sqlite
 public
+.wrangler

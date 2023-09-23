@@ -32,7 +32,7 @@ export default class CodeService {
     if (manager) {
       await save(manager);
     } else {
-      await getDataSource().transaction(save);
+      await (await getDataSource()).transaction(save);
     }
 
     return code;

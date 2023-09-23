@@ -71,7 +71,7 @@ export default class CodeController {
 
       const operations = getChangesetOperations(changesets);
 
-      await getDataSource().transaction(async transactionalEntityManager => {
+      await (await getDataSource()).transaction(async transactionalEntityManager => {
         await CodeService.save(
           model.getContent(),
           codeVersion + 1,

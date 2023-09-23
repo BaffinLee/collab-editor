@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "cf:deploy": "wrangler publish",
+    "cf:build": "wrangler deploy --dry-run --outdir dist",
+    "cf:deploy": "wrangler deploy",
     "cf:dev": "wrangler dev",
     "dev": "cross-env NODE_ENV=development nodemon",
     "start": "cross-env NODE_ENV=production nodemon"
@@ -17,7 +18,6 @@
     "koa-bodyparser": "^4.3.0",
     "koa-router": "^10.1.1",
     "koa-static": "^5.0.0",
-    "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.2",
     "typeorm": "^0.3.17",
     "ws": "^8.5.0"
