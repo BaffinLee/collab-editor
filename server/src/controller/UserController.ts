@@ -7,6 +7,7 @@ export default class UserController {
     const user = await UserService.getOrCreate(id);
     if (user.id !== id) {
       ctx.cookies.set('user_id', `${user.id}`, {
+        path: '/',
         maxAge: 3600 * 24 * 365,
       });
     }

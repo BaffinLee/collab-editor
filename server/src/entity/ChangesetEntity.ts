@@ -6,7 +6,7 @@ import {
   CreateDateColumn,
   BaseEntity,
   Index,
-} from 'typeorm';
+} from '@edge-js/typeorm';
 import Operation from '../../../common/operation/Operation';
 import { convertOperations } from '../../../common/utils/type';
 

@@ -1,7 +1,7 @@
 import { DEFAULT_CODE } from '../../../common/utils/text';
 import CodeEntity from '../entity/CodeEntity';
 import { SNAPSHOT_NUM } from './SnapshotService';
-import { EntityManager } from 'typeorm';
+import { EntityManager } from '@edge-js/typeorm';
 import SnapshotEntity from '../entity/SnapshotEntity';
 import { getDataSource } from '../datasource';
 

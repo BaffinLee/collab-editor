@@ -1,4 +1,4 @@
-import { DataSource, DataSourceOptions } from "typeorm";
+import { DataSource, DataSourceOptions } from "@edge-js/typeorm";
 import ChangesetEntity from "./entity/ChangesetEntity";
 import CodeEntity from "./entity/CodeEntity";
 import SnapshotEntity from "./entity/SnapshotEntity";

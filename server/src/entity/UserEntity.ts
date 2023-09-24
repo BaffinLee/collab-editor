@@ -5,7 +5,7 @@ import {
   UpdateDateColumn,
   CreateDateColumn,
   BaseEntity,
-} from 'typeorm';
+} from '@edge-js/typeorm';
 
 @Entity()
 export default class UserEntity extends BaseEntity {

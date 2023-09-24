@@ -10,16 +10,17 @@
     "start": "cross-env NODE_ENV=production nodemon"
   },
   "dependencies": {
+    "@edge-js/typeorm": "^0.3.18",
     "@faker-js/faker": "^6.0.0-alpha.7",
     "@koa/cors": "^3.1.0",
     "blueimp-md5": "^2.19.0",
+    "cloudworker-router": "^4.1.5",
     "dayjs": "^1.10.8",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-router": "^10.1.1",
     "koa-static": "^5.0.0",
     "sqlite3": "^5.0.2",
-    "typeorm": "^0.3.17",
     "ws": "^8.5.0"
   },
   "devDependencies": {

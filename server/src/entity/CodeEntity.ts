@@ -6,7 +6,7 @@ import {
   CreateDateColumn,
   BaseEntity,
   Index,
-} from 'typeorm';
+} from '@edge-js/typeorm';
 
 @Entity()
 export default class CodeEntity extends BaseEntity {
