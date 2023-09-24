@@ -32,8 +32,8 @@ id = "9fd760ea2bf044d784988ea7115cc142"
 binding = "CollaEditorDB"
 database_name = "colla-editor"
 database_id = "22b98bc9-da38-49e8-8f18-e20bbbea78e7"
-preview_database_id = "22b98bc9-da38-49e8-8f18-e20bbbea78e7"
-migrations_table = "colla-editor" # Customize this value to change your applied migrations table name
+# preview_database_id = ""
+# migrations_table = "" # Customize this value to change your applied migrations table name
 migrations_dir = "src/migrations" # Customize this value to rename the `migrations` folder
 
 # # Service binding - For more information: https://developers.cloudflare.com/workers/platform/services

@@ -156,6 +156,7 @@ export default {
     const sqlite3 = getSqlite3Driver(env);
     await getDataSource({
       logging: isDev,
+      synchronize: isDev,
       flags: sqlite3.OPEN_URI,
       driver: {
         ...sqlite3,
