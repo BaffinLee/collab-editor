@@ -21,23 +21,13 @@ const getSqlite3Driver = (env: Env) => ({
         const isDeleteQuery = sql.startsWith("DELETE ");
         const isUpdateQuery = sql.startsWith("UPDATE ");
         if (isInsertQuery || isDeleteQuery || isUpdateQuery) {
-          env.CollaEditorDB.prepare(sql + ' RETURNING *').bind(...params).all<{ id: number }>().then(res => {
-            callback?.call({
-              lastID: res.results[0]?.id || 0,
-              changes: res.results.length,
-            }, res.error || null);
-          }).catch(err => {
-            callback?.call({
-              lastID: 0,
-              changes: 0,
-            }, err);
-          });
-          return this;
+          sql += ' RETURNING *';
         }
+        console.log('run', sql, params);
         env.CollaEditorDB.prepare(sql).bind(...params).run<{ id: number }>().then(res => {
           callback?.call({
-            lastID: 0,
-            changes: 0,
+            lastID: res.results[0]?.id || 0,
+            changes: res.results.length,
           }, res.error || null);
         }).catch(err => {
           callback?.call({
@@ -57,6 +47,17 @@ const getSqlite3Driver = (env: Env) => ({
           params = [];
         } else if (typeof params === 'undefined') {
           params = [];
+        }
+        console.log('all', sql, params);
+        const isTransactionStart = sql.startsWith("BEGIN TRANSACTION");
+        const isTransactionDrop = sql.startsWith("ROLLBACK");
+        const isTransactionEnd = sql.startsWith("COMMIT");
+        if (isTransactionStart || isTransactionEnd || isTransactionDrop) {
+          callback?.call({
+            lastID: 0,
+            changes: 0
+          }, null, []);
+          return this;
         }
         env.CollaEditorDB.prepare(sql).bind(...params).all<T>().then(res => {
           callback?.call({
@@ -114,7 +115,7 @@ const getKoaContext = async (ctx: Context<Env>, request: Request) => {
     query: ctx.query,
     resCookies: {} as { [key: string]: CookieOption & { value: string } },
     params: ctx.params,
-    headers: {},
+    headers: {} as { [key: string]: string },
     cookies: {
       get(key: string) {
         return reqCookies[key];
@@ -165,9 +166,25 @@ export default {
     });
 
     const router = new Router<Env>();
+    let context: Awaited<ReturnType<typeof getKoaContext>>;
+    router.use(async (ctx, next) => {
+      const origin = ctx.request.headers.get('Origin')
+        || ctx.request.headers.get('Referer')
+        || ctx.request.url;
+      const url = new URL(origin);
+      context = await getKoaContext(ctx, request);
+      context.headers['Access-Control-Allow-Origin'] = url.origin;
+      context.headers['Access-Control-Max-Age'] = '86400';
+      context.headers['Access-Control-Allow-Headers'] = 'Content-Type';
+      context.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS';
+      if (ctx.request.method === 'OPTIONS') {
+        return getResByCtx(context);
+      } else {
+        return next();
+      }
+    });
     routes.forEach(route => {
       router[route.method as 'all'](route.path, async (ctx) => {
-        const context = await getKoaContext(ctx, request);
         await route.handler(context as any);
         return getResByCtx(context);
       });
