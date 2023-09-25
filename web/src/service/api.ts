@@ -7,9 +7,19 @@ export const API_HOST = import.meta.env.VITE_API_HOST || location.host;
 
 axios.defaults.withCredentials = true;
 axios.defaults.baseURL = `${location.protocol}//${API_HOST}${process.env.NODE_ENV === 'development' ? '/api' : ''}`;
+axios.interceptors.request.use((config) => {
+  if (config.params?.userId === undefined) {
+    config.params = {
+      ...config.params,
+      userId: localStorage.getItem('user_id'),
+    };
+  }
+  return config;
+});
 
 export async function getUser() {
   const res = await axios.get<UserInfo>('/user');
+  localStorage.setItem('user_id', `${res.data.id}`);
   return res.data;
 }
 

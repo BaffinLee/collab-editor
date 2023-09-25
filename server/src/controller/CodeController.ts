@@ -33,7 +33,7 @@ export default class CodeController {
   }
 
   static async uploadChangeset(ctx: Context) {
-    const userId = Number(ctx.cookies.get('user_id'));
+    const userId = Number(ctx.cookies.get('user_id') || ctx.query.userId);
     const codeId = ctx.params.codeId;
     let code = await CodeEntity.findOneBy({ codeId });
     if (!userId || !codeId || !code) {

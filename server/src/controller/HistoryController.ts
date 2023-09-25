@@ -1,10 +1,7 @@
 import { Context } from "koa";
 import Changeset from "../../../common/model/Changeset";
-import Model from "../../../common/model/Model";
-import Operation from "../../../common/operation/Operation";
 import { invertOperations } from "../../../common/transform/invert";
 import { getChangesetOperations } from "../../../common/utils";
-import { convertChangesets } from "../../../common/utils/type";
 import ChangesetEntity from "../entity/ChangesetEntity";
 import CodeEntity from "../entity/CodeEntity";
 import UserEntity from "../entity/UserEntity";
@@ -57,7 +54,7 @@ export default class HistoryController {
     const codeId = ctx.params.codeId;
     const version = Number(ctx.request.body.version);
     const memberId = Number(ctx.request.body.memberId);
-    const userId = Number(ctx.cookies.get('user_id'));
+    const userId = Number(ctx.cookies.get('user_id') || ctx.query.userId);
     if (!codeId || !(version >= 0) || !userId || !memberId) {
       ctx.status = 400;
       return;
