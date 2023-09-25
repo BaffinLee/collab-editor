@@ -114,7 +114,10 @@ const getKoaContext = async (ctx: Context<Env>, request: Request) => {
       body: reqBody,
       protocol: url.protocol.replace(/:$/, ''),
     },
-    query: ctx.query,
+    query: Array.from(url.searchParams.entries()).reduce((map, [key, value]) => {
+      map[key] = value;
+      return map;
+    }, {} as { [key: string]: string } ),
     resCookies: {} as { [key: string]: CookieOption & { value: string } },
     params: ctx.params,
     headers: {} as { [key: string]: string },
