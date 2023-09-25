@@ -8,7 +8,7 @@ export default class UserController {
     if (user.id !== id) {
       ctx.cookies.set('user_id', `${user.id}`, {
         path: '/',
-        maxAge: 3600 * 24 * 365,
+        maxAge: 3600 * 1000 * 24 * 365,
       });
     }
     ctx.body = {
