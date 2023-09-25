@@ -58,10 +58,10 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@edge-js/typeorm@^0.3.18":
-  version "0.3.18"
-  resolved "https://registry.yarnpkg.com/@edge-js/typeorm/-/typeorm-0.3.18.tgz#1744d6f62d898f03e7941476519466013356c73d"
-  integrity sha512-Um4YP5+PfwbdScPKx6SKt5VqZ3btcyE7SJdQ65M1892t7Cq13Y1SYI9b4F9DWqcHHjHWTsB3zPb8xBVHzAmFIw==
+"@edge-js/typeorm@^0.3.19":
+  version "0.3.19"
+  resolved "https://registry.yarnpkg.com/@edge-js/typeorm/-/typeorm-0.3.19.tgz#1812f977017bcb4ec92d719b31841df427110972"
+  integrity sha512-Nwn4JK3wcA5DoY+wQlctEPeoiGH5d9Apf1WYVZX1krtf5QNM59h79HcEHXyqq1+ULmynVegK5HpJMMRVI40MIQ==
   dependencies:
     "@sqltools/formatter" "^1.2.5"
     app-root-path "^3.1.0"

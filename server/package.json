@@ -10,7 +10,7 @@
     "start": "cross-env NODE_ENV=production nodemon"
   },
   "dependencies": {
-    "@edge-js/typeorm": "^0.3.18",
+    "@edge-js/typeorm": "^0.3.19",
     "@faker-js/faker": "^6.0.0-alpha.7",
     "@koa/cors": "^3.1.0",
     "blueimp-md5": "^2.19.0",
