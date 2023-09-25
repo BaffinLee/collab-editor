@@ -4,6 +4,7 @@ import { UserInfo, WebSocketState } from "../../../common/type";
 import { HeartbeatMessage, RoomChangeType, SocketMessage, SocketMessageType } from "../../../common/type/message";
 import CodeEntity from "../entity/CodeEntity";
 import UserEntity from "../entity/UserEntity";
+import type { Context } from "koa";
 
 interface ClientInfo {
   codeId: string;
@@ -79,7 +80,7 @@ export default class RoomService {
     });
   }
 
-  static async getRoomMembers(codeId: string) {
+  static async getRoomMembers(codeId: string, ctx?: Context) {
     const memberList: UserInfo[] = [];
     const arr = this.connectionMap[codeId]?.clients || [];
     for (let i = 0; i < arr.length; i++) {
@@ -89,7 +90,7 @@ export default class RoomService {
     return memberList;
   }
 
-  static getRoomVersion(codeId: string) {
+  static getRoomVersion(codeId: string, ctx?: Context) {
     return this.connectionMap[codeId]?.version || 0;
   }
 

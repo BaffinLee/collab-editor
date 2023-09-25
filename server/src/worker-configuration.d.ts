@@ -17,4 +17,5 @@ interface Env {
 	//
 	// Environment variables
     DEV: string;
+	WORKER: string;
 }

@@ -2,6 +2,7 @@ import { Context } from 'koa';
 import dayjs from 'dayjs';
 import CodeService from '../service/CodeService';
 import RoomService from '../service/RoomService';
+import RoomServiceWorker from '../service/RoomServiceWorker';
 import { convertChangesets } from '../../../common/utils/type';
 import CodeEntity from '../entity/CodeEntity';
 import ChangesetService from '../service/ChangesetService';
@@ -21,9 +22,10 @@ export default class CodeController {
   }
 
   static async getMembers(ctx: Context) {
+    const service = ctx.env?.WORKER ? RoomServiceWorker : RoomService;
     const codeId = ctx.params.codeId || '';
-    const members = await RoomService.getRoomMembers(codeId);
-    const version = await RoomService.getRoomVersion(codeId);
+    const members = await service.getRoomMembers(codeId, ctx);
+    const version = await service.getRoomVersion(codeId, ctx);
     ctx.body = {
       members,
       version,

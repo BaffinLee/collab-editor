@@ -1,6 +1,7 @@
 import { getDataSource } from './datasource';
 import { Router, Context } from 'cloudworker-router';
 import routes from './routes';
+import RoomService from './service/RoomServiceWorker';
 
 const getSqlite3Driver = (env: Env) => ({
   Database: function (fileName: string, mode?: number, callback?: (err: null | Error) => void) {
@@ -120,6 +121,7 @@ const getKoaContext = async (ctx: Context<Env>, request: Request) => {
     }, {} as { [key: string]: string } ),
     resCookies: {} as { [key: string]: CookieOption & { value: string } },
     params: ctx.params,
+    env: ctx.env,
     headers: {} as { [key: string]: string },
     cookies: {
       get(key: string) {
@@ -156,6 +158,45 @@ const getResByCtx = async (context: Awaited<ReturnType<typeof getKoaContext>>) =
   });
 };
 
+const handleCros = (
+  context: Awaited<ReturnType<typeof getKoaContext>>,
+  ctx: Context<Env>,
+  next: () => Promise<Response | undefined>,
+) => {
+  const origin = ctx.request.headers.get('Origin')
+    || ctx.request.headers.get('Referer')
+    || ctx.request.url;
+  const url = new URL(origin);
+  context.headers['Access-Control-Allow-Origin'] = url.origin;
+  context.headers['Access-Control-Max-Age'] = '86400';
+  context.headers['Access-Control-Allow-Headers'] = 'Content-Type';
+  context.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS';
+  context.headers['Access-Control-Allow-Credentials'] = 'true';
+  if (ctx.request.method === 'OPTIONS') {
+    return getResByCtx(context);
+  } else {
+    return next();
+  }
+};
+
+const handleWebsocket = (request: Request, env: Env) => {
+  const upgradeHeader = request.headers.get('Upgrade');
+  if (!upgradeHeader || upgradeHeader !== 'websocket') {
+    return;
+  }
+
+  const webSocketPair = new WebSocketPair();
+  const [client, server] = Object.values(webSocketPair);
+
+  server.accept();
+  RoomService.handleConnection(server, request, env);
+
+  return new Response(null, {
+    status: 101,
+    webSocket: client,
+  });
+};
+
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const isDev = env.DEV === 'true';
@@ -170,24 +211,14 @@ export default {
       },
     });
 
+    const wsRes = handleWebsocket(request, env);
+    if (wsRes) return wsRes;
+
     const router = new Router<Env>();
     let context: Awaited<ReturnType<typeof getKoaContext>>;
     router.use(async (ctx, next) => {
-      const origin = ctx.request.headers.get('Origin')
-        || ctx.request.headers.get('Referer')
-        || ctx.request.url;
-      const url = new URL(origin);
       context = await getKoaContext(ctx, request);
-      context.headers['Access-Control-Allow-Origin'] = url.origin;
-      context.headers['Access-Control-Max-Age'] = '86400';
-      context.headers['Access-Control-Allow-Headers'] = 'Content-Type';
-      context.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS';
-      context.headers['Access-Control-Allow-Credentials'] = 'true';
-      if (ctx.request.method === 'OPTIONS') {
-        return getResByCtx(context);
-      } else {
-        return next();
-      }
+      return handleCros(context, ctx, next);
     });
     routes.forEach(route => {
       router[route.method as 'all'](route.path, async (ctx) => {
