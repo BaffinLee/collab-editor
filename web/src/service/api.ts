@@ -5,6 +5,7 @@ import { CodeInfo, CodeMeta, SnapshotInfo, UploadChangesetResult } from '../type
 
 export const API_HOST = import.meta.env.VITE_API_HOST || location.host;
 
+axios.defaults.withCredentials = true;
 axios.defaults.baseURL = `${location.protocol}//${API_HOST}${process.env.NODE_ENV === 'development' ? '/api' : ''}`;
 
 export async function getUser() {

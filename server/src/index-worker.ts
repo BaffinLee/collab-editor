@@ -177,6 +177,7 @@ export default {
       context.headers['Access-Control-Max-Age'] = '86400';
       context.headers['Access-Control-Allow-Headers'] = 'Content-Type';
       context.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS';
+      context.headers['Access-Control-Allow-Credentials'] = 'true';
       if (ctx.request.method === 'OPTIONS') {
         return getResByCtx(context);
       } else {
