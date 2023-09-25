@@ -17,6 +17,7 @@ interface RoomMemberInfo {
   u: number;
   m: number;
   c?: number[];
+  l: number;
 }
 
 interface RoomInfo {
@@ -26,7 +27,7 @@ interface RoomInfo {
 
 const HEALTH_TIME = 60 * 1000;
 const CHECK_ROOM_TIME = 1500;
-const CACHE_TTL = 60 * 1000 * 2;
+const CACHE_TTL = 90 * 1000;
 
 export default class RoomService {
   static client: ClientInfo;
@@ -86,6 +87,7 @@ export default class RoomService {
     const room = await this.getRoomInfo();
     const memberList: UserInfo[] = [];
     for (let i = 0; i < room.m.length; i++) {
+      if (!(room.m[i].l > Date.now() - HEALTH_TIME)) continue;
       const user = await UserEntity.findOneBy({ id: room.m[i].u });
       user && memberList.push({ ...user, memberId: room.m[i].m });
     }
@@ -114,6 +116,7 @@ export default class RoomService {
       switch (message.type) {
         case SocketMessageType.Heartbeat:
           this.handleHeartbeat();
+          this.updateRoomVersion(true);
           break;
         case SocketMessageType.CursorChange:
           this.client.cursor = message.data.cursor;
@@ -179,7 +182,7 @@ export default class RoomService {
     const cursorChangeMembers = room.m.filter(member => {
       const oldMember = oldMap[member.m];
       if (!oldMember) return !!member.c;
-      if (member.c && oldMember.c?.[0] !== member.c?.[0] || oldMember.c?.[1] !== member.c?.[1]) return true;
+      if (member.c && (oldMember.c?.[0] !== member.c?.[0] || oldMember.c?.[1] !== member.c?.[1])) return true;
       return false;
     });
     const userInfoMap: { [userId: number]: UserEntity } = {};
@@ -225,24 +228,26 @@ export default class RoomService {
     }
   }
 
-  private static async updateRoomVersion() {
+  private static async updateRoomVersion(keepVer?: boolean) {
     const room = await this.getRoomInfo();
     const index = room.m.findIndex(item => item.m === this.client.memberId);
-    const data = {
+    const data: RoomMemberInfo = {
       m: this.client.memberId,
       u: this.client.userId,
       c: this.client.cursor && [this.client.cursor.rangeStart, this.client.cursor.rangeEnd],
+      l: Date.now(),
     };
     if (index !== -1) {
       room.m[index] = data;
     } else {
       room.m.push(data);
     }
-    room.v += 1;
+    if (!keepVer) room.v += 1;
+    room.m = room.m.filter(item => item.l > Date.now() - HEALTH_TIME);
+    this.lastRoomInfo = room;
     await this.env.CollaEditorKV.put(this.cacheName, JSON.stringify(room), {
       expirationTtl: CACHE_TTL,
     });
-    this.lastRoomInfo = room;
   }
 
   private static get cacheName() {
