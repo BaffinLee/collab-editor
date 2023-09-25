@@ -9,6 +9,10 @@ export default class UserController {
       ctx.cookies.set('user_id', `${user.id}`, {
         path: '/',
         maxAge: 3600 * 1000 * 24 * 365,
+        ...(ctx.request.protocol === 'https' ? {
+          sameSite: 'none',
+          secure: true,
+        } : {}),
       });
     }
     ctx.body = {

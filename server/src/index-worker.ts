@@ -105,12 +105,14 @@ const getKoaContext = async (ctx: Context<Env>, request: Request) => {
   } catch (err) {
     // do nothing
   }
+  const url = new URL(request.url);
   const context = {
     body: '',
     status: 200,
     request: {
       ...request,
       body: reqBody,
+      protocol: url.protocol.replace(/:$/, ''),
     },
     query: ctx.query,
     resCookies: {} as { [key: string]: CookieOption & { value: string } },
