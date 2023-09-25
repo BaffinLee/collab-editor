@@ -2,6 +2,7 @@ import { Context } from 'koa';
 import dayjs from 'dayjs';
 import CodeService from '../service/CodeService';
 import RoomService from '../service/RoomService';
+import RoomServiceWorker from '../service/RoomServiceWorker';
 import { convertChangesets } from '../../../common/utils/type';
 import CodeEntity from '../entity/CodeEntity';
 import ChangesetService from '../service/ChangesetService';
@@ -11,8 +12,8 @@ import Model, { ApplyType } from '../../../common/model/Model';
 import { getLock, releaseLock } from '../utils/lock';
 import { SocketMessageType } from '../../../common/type/message';
 import { getChangesetOperations } from '../../../common/utils';
-import { getManager } from 'typeorm';
 import ChangesetEntity from '../entity/ChangesetEntity';
+import { getDataSource } from '../datasource';
 
 export default class CodeController {
   static async get(ctx: Context) {
@@ -21,9 +22,10 @@ export default class CodeController {
   }
 
   static async getMembers(ctx: Context) {
+    const service = ctx.env?.WORKER ? RoomServiceWorker : RoomService;
     const codeId = ctx.params.codeId || '';
-    const members = await RoomService.getRoomMembers(codeId);
-    const version = await RoomService.getRoomVersion(codeId);
+    const members = await service.getRoomMembers(codeId, ctx);
+    const version = await service.getRoomVersion(codeId, ctx);
     ctx.body = {
       members,
       version,
@@ -31,9 +33,9 @@ export default class CodeController {
   }
 
   static async uploadChangeset(ctx: Context) {
-    const userId = Number(ctx.cookies.get('user_id'));
+    const userId = Number(ctx.cookies.get('user_id') || ctx.query.userId);
     const codeId = ctx.params.codeId;
-    let code = await CodeEntity.findOne({ codeId });
+    let code = await CodeEntity.findOneBy({ codeId });
     if (!userId || !codeId || !code) {
       ctx.status = 403;
       return;
@@ -57,7 +59,7 @@ export default class CodeController {
     await getLock(codeId);
 
     try {
-      code = await CodeEntity.findOne({ codeId }) as CodeEntity;
+      code = await CodeEntity.findOneBy({ codeId }) as CodeEntity;
 
       const codeVersion = code.version;
       let beforeChangesets: Changeset[] = [];
@@ -71,7 +73,7 @@ export default class CodeController {
 
       const operations = getChangesetOperations(changesets);
 
-      await getManager().transaction(async transactionalEntityManager => {
+      await (await getDataSource()).transaction(async transactionalEntityManager => {
         await CodeService.save(
           model.getContent(),
           codeVersion + 1,
@@ -146,7 +148,7 @@ export default class CodeController {
       return;
     }
 
-    const code = await CodeEntity.findOne({ codeId });
+    const code = await CodeEntity.findOneBy({ codeId });
     if (!code) {
       ctx.status = 400;
       return;

@@ -1,14 +1,13 @@
 import UserEntity from "../entity/UserEntity";
-import { faker } from "@faker-js/faker";
-import md5 from "blueimp-md5"
+import { getRandomName } from "../utils/name";
 
 export default class UserService {
   static async getOrCreate(id: number) {
-    let user = await UserEntity.findOne(id);
+    let user = await UserEntity.findOneBy({ id });
     if (!user) {
       user = new UserEntity();
-      user.name = faker.name.findName();
-      user.avatar = `https://robohash.org/${md5(user.name)}`;
+      user.name = getRandomName();
+      user.avatar = `https://robohash.org/${user.name.replace(/[^a-z0-9]/gi, '')}`;
       await user.save();
     }
     return user;

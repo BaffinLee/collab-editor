@@ -4,6 +4,7 @@ import { UserInfo, WebSocketState } from "../../../common/type";
 import { HeartbeatMessage, RoomChangeType, SocketMessage, SocketMessageType } from "../../../common/type/message";
 import CodeEntity from "../entity/CodeEntity";
 import UserEntity from "../entity/UserEntity";
+import type { Context } from "koa";
 
 interface ClientInfo {
   codeId: string;
@@ -79,17 +80,17 @@ export default class RoomService {
     });
   }
 
-  static async getRoomMembers(codeId: string) {
+  static async getRoomMembers(codeId: string, ctx?: Context) {
     const memberList: UserInfo[] = [];
     const arr = this.connectionMap[codeId]?.clients || [];
     for (let i = 0; i < arr.length; i++) {
-      const user = await UserEntity.findOne(arr[i].userId);
+      const user = await UserEntity.findOneBy({ id: arr[i].userId });
       user && memberList.push({ ...user, memberId: arr[i].memberId });
     }
     return memberList;
   }
 
-  static getRoomVersion(codeId: string) {
+  static getRoomVersion(codeId: string, ctx?: Context) {
     return this.connectionMap[codeId]?.version || 0;
   }
 
@@ -118,7 +119,7 @@ export default class RoomService {
   }
 
   private static async handleHeartbeat(client: ClientInfo) {
-    const code = await CodeEntity.findOne({ codeId: client.codeId });
+    const code = await CodeEntity.findOneBy({ codeId: client.codeId });
     if (!code || client.ws.readyState !== WebSocketState.Ready) {
       return;
     }
@@ -134,7 +135,7 @@ export default class RoomService {
   }
 
   private static async handleRoomChange(client: ClientInfo, type: RoomChangeType) {
-    const user = await UserEntity.findOne(client.userId);
+    const user = await UserEntity.findOneBy({ id: client.userId });
     if (!user) {
       return;
     }

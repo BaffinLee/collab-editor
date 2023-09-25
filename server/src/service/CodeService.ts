@@ -1,12 +1,13 @@
 import { DEFAULT_CODE } from '../../../common/utils/text';
 import CodeEntity from '../entity/CodeEntity';
 import { SNAPSHOT_NUM } from './SnapshotService';
-import { getManager, EntityManager } from 'typeorm';
+import { EntityManager } from '@edge-js/typeorm';
 import SnapshotEntity from '../entity/SnapshotEntity';
+import { getDataSource } from '../datasource';
 
 export default class CodeService {
   static async getOrCreate(codeId: string) {
-    return await CodeEntity.findOne({ codeId }) || this.save(DEFAULT_CODE, 0, codeId);
+    return await CodeEntity.findOneBy({ codeId }) || this.save(DEFAULT_CODE, 0, codeId);
   }
 
   static async save(content: string, version: number, codeOrId: CodeEntity | string, manager?: EntityManager) {
@@ -31,7 +32,7 @@ export default class CodeService {
     if (manager) {
       await save(manager);
     } else {
-      await getManager().transaction(save);
+      await (await getDataSource()).transaction(save);
     }
 
     return code;

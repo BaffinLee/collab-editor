@@ -9,7 +9,7 @@
 
 ## Try it out
 
-[https://collab-editor-7fqm.onrender.com/](https://collab-editor-7fqm.onrender.com/)
+[https://collab-editor.pages.dev/](https://collab-editor.pages.dev/)
 
 ![Screen Shot](https://raw.githubusercontent.com/BaffinLee/colla-editor/main/web/src/static/image/screenshot.gif)
 

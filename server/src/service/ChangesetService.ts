@@ -1,4 +1,4 @@
-import { Between  } from 'typeorm';
+import { Between  } from '@edge-js/typeorm';
 import { checkChangesets } from '../../../common/utils';
 import { convertChangesets } from '../../../common/utils/type';
 import ChangesetEntity from '../entity/ChangesetEntity';

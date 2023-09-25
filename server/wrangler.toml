@@ -1,0 +1,58 @@
+name = "colla-editor"
+main = "src/index-worker.ts"
+compatibility_date = "2023-06-11"
+workers_dev= true
+
+[dev]
+ip = "localhost"
+port = 3123
+local_protocol = "http"
+
+# # Environment variables
+[vars]
+DEV = "false"
+WORKER = "true"
+
+# # KV Namespace binding - For more information: https://developers.cloudflare.com/workers/runtime-apis/kv
+[[kv_namespaces]]
+binding = "CollaEditorKV"
+id = "9fd760ea2bf044d784988ea7115cc142"
+
+# # Durable Object binding - For more information: https://developers.cloudflare.com/workers/runtime-apis/durable-objects
+# [[durable_objects]]
+# binding = "MY_DURABLE_OBJECT"
+# class_name = "MyDurableObject"
+
+# # Bucket binding - For more information: https://developers.cloudflare.com/workers/runtime-apis/kv#bucket
+# [[buckets]]
+# binding = "MY_BUCKET"
+# name = "my-bucket"
+# bucket_id = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+
+[[d1_databases]]
+binding = "CollaEditorDB"
+database_name = "colla-editor"
+database_id = "22b98bc9-da38-49e8-8f18-e20bbbea78e7"
+# preview_database_id = ""
+# migrations_table = "" # Customize this value to change your applied migrations table name
+migrations_dir = "src/migrations" # Customize this value to rename the `migrations` folder
+
+# # Service binding - For more information: https://developers.cloudflare.com/workers/platform/services
+# [[routes]]
+# pattern = "*"
+# zone_name = ""
+
+# # Queue binding - For more information: https://developers.cloudflare.com/workers/runtime-apis/queues
+# [[queues]]
+# binding = "MY_QUEUE"
+# name = "my-queue"
+# zone_id = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+
+# [env.production]
+# MY_VARIABLE = "staging_value"
+
+# [env.staging]
+# MY_VARIABLE = "staging_value"
+
+# [env.shared]
+# MY_VARIABLE = "staging_value"

@@ -3,11 +3,16 @@ import UserService from '../service/UserService';
 
 export default class UserController {
   static async get(ctx: Context) {
-    const id = Number(ctx.cookies.get('user_id')) || 0;
+    const id = Number(ctx.cookies.get('user_id') || ctx.query.userId) || 0;
     const user = await UserService.getOrCreate(id);
     if (user.id !== id) {
       ctx.cookies.set('user_id', `${user.id}`, {
-        maxAge: 3600 * 24 * 365,
+        path: '/',
+        maxAge: 3600 * 1000 * 24 * 365,
+        ...(ctx.request.protocol === 'https' ? {
+          sameSite: 'none',
+          secure: true,
+        } : {}),
       });
     }
     ctx.body = {

@@ -6,28 +6,28 @@ import {
   CreateDateColumn,
   BaseEntity,
   Index,
-} from 'typeorm';
+} from '@edge-js/typeorm';
 
 @Entity()
 @Index(['codeId', 'version'], { unique: true })
 export default class SnapshotEntity extends BaseEntity {
 
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'int'})
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar' })
   codeId: string;
 
-  @Column('text')
+  @Column({ type: 'text' })
   content: string;
 
-  @Column()
+  @Column({ type: 'int' })
   version: number;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'date' })
   updateTime: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'date' })
   createTime: Date;
 
 }

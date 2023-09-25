@@ -3,24 +3,28 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
+    "cf:build": "wrangler deploy --dry-run --outdir dist",
+    "cf:deploy": "wrangler deploy",
+    "cf:dev": "wrangler dev",
     "dev": "cross-env NODE_ENV=development nodemon",
     "start": "cross-env NODE_ENV=production nodemon"
   },
   "dependencies": {
+    "@edge-js/typeorm": "^0.3.19",
     "@faker-js/faker": "^6.0.0-alpha.7",
     "@koa/cors": "^3.1.0",
     "blueimp-md5": "^2.19.0",
+    "cloudworker-router": "^4.1.5",
     "dayjs": "^1.10.8",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-router": "^10.1.1",
     "koa-static": "^5.0.0",
-    "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.2",
-    "typeorm": "^0.2.44",
     "ws": "^8.5.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230419.0",
     "@types/blueimp-md5": "^2.18.0",
     "@types/koa": "^2.13.4",
     "@types/koa-bodyparser": "^4.3.5",
@@ -32,6 +36,7 @@
     "cross-env": "^7.0.3",
     "nodemon": "^2.0.15",
     "ts-node": "^10.6.0",
-    "typescript": "^4.6.2"
+    "typescript": "^4.6.2",
+    "wrangler": "^3.9.0"
   }
 }

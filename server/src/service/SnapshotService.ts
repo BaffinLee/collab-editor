@@ -8,7 +8,7 @@ export default class SnapshotService {
   static async get(codeId: string, version: number) {
     const num = version % SNAPSHOT_NUM;
     const baseVersion = version - num;
-    const snapshot = await SnapshotEntity.findOneOrFail({ version: baseVersion, codeId });
+    const snapshot = await SnapshotEntity.findOneByOrFail({ version: baseVersion, codeId });
     const model = new Model(snapshot.content);
     if (num === 0) {
       return model;

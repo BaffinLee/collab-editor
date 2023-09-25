@@ -6,43 +6,46 @@ import {
   CreateDateColumn,
   BaseEntity,
   Index,
-} from 'typeorm';
+} from '@edge-js/typeorm';
 
 @Entity()
 export default class CodeEntity extends BaseEntity {
 
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'int' })
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index({ unique: true })
   codeId: string;
 
-  @Column('text')
+  @Column({ type: 'text' })
   content: string;
 
   @Column({
     default: '',
+    type: 'varchar',
   })
   title: string;
 
   @Column({
     default: 'typescript',
+    type: 'varchar',
   })
   language: string;
 
   @Column({
     default: 0,
+    type: 'int',
   })
   metaVersion: number;
 
-  @Column()
+  @Column({ type: 'int' })
   version: number;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'date' })
   updateTime: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'date' })
   createTime: Date;
 
 }

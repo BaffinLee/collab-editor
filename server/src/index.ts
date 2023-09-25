@@ -1,6 +1,4 @@
-import 'reflect-metadata';
 import Koa from 'koa';
-import { createConnection } from 'typeorm';
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import cors from '@koa/cors';
@@ -9,6 +7,7 @@ import routes from './routes';
 import { WebSocketServer } from 'ws';
 import RoomService from './service/RoomService';
 import HomeController from './controller/HomeController';
+import { getDataSource } from './datasource';
 
 const port = process.env.PORT || 3123;
 const host = '0.0.0.0';
@@ -26,7 +25,7 @@ app.use(cors({ credentials: true }));
 app.use(router.routes());
 app.use(HomeController.showHomePage);
 
-createConnection().then(() => {
+getDataSource().then(() => {
   const server = app.listen(+port, host, () => {
     console.log(`server is now running at http://localhost:${port}`);
   });
