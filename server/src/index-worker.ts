@@ -185,6 +185,7 @@ export default {
     });
     routes.forEach(route => {
       router[route.method as 'all'](route.path, async (ctx) => {
+        context.params = ctx.params;
         await route.handler(context as any);
         return getResByCtx(context);
       });
