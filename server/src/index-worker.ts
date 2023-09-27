@@ -189,7 +189,7 @@ const handleWebsocket = (request: Request, env: Env) => {
   const [client, server] = Object.values(webSocketPair);
 
   server.accept();
-  RoomService.handleConnection(server, request, env);
+  RoomService.handleConnection(server, request);
 
   return new Response(null, {
     status: 101,

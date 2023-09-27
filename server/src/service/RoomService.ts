@@ -80,7 +80,7 @@ export default class RoomService {
     });
   }
 
-  static async getRoomMembers(codeId: string, ctx?: Context) {
+  static async getRoomMembers(codeId: string) {
     const memberList: UserInfo[] = [];
     const arr = this.connectionMap[codeId]?.clients || [];
     for (let i = 0; i < arr.length; i++) {
@@ -90,8 +90,15 @@ export default class RoomService {
     return memberList;
   }
 
-  static getRoomVersion(codeId: string, ctx?: Context) {
+  static getRoomVersion(codeId: string) {
     return this.connectionMap[codeId]?.version || 0;
+  }
+
+  static async getRoomInfo(codeId: string) {
+    return {
+      members: await this.getRoomMembers(codeId),
+      version: this.getRoomVersion(codeId),
+    };
   }
 
   private static handleClose(client: ClientInfo) {

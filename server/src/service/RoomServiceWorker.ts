@@ -1,8 +1,8 @@
-import type { Context } from "koa";
 import { UserInfo, WebSocketState } from "../../../common/type";
 import { CursorChangeMessage, HeartbeatMessage, RoomChangeMessage, RoomChangeType, SocketMessage, SocketMessageType } from "../../../common/type/message";
 import CodeEntity from "../entity/CodeEntity";
 import UserEntity from "../entity/UserEntity";
+import RoomEntity, { RoomMember } from "../entity/RoomEntity";
 
 interface ClientInfo {
   codeId: string;
@@ -13,30 +13,16 @@ interface ClientInfo {
   cursor?: CursorChangeMessage['data']['cursor'];
 }
 
-interface RoomMemberInfo {
-  u: number;
-  m: number;
-  c?: number[];
-  l: number;
-}
-
-interface RoomInfo {
-  v: number;
-  m: RoomMemberInfo[];
-}
-
 const HEALTH_TIME = 60 * 1000;
 const CHECK_ROOM_TIME = 1500;
-const CACHE_TTL = 90 * 1000;
 
 export default class RoomService {
   static client: ClientInfo;
   static healthCheckTimer: NodeJS.Timer | null = null;
   static roomCheckTimer: NodeJS.Timer | null = null;
-  static env: Env;
-  static lastRoomInfo: RoomInfo | null = null;
+  static lastRoomInfo: { version: number; members: RoomMember[] } | null = null;
 
-  static handleConnection(ws: WebSocket, req: Request, env: Env) {
+  static handleConnection(ws: WebSocket, req: Request) {
     const url = new URL(req.url || '', 'http://127.0.0.1');
     const codeId = url.searchParams.get('codeId');
     const userId = Number(url.searchParams.get('userId'));
@@ -54,7 +40,6 @@ export default class RoomService {
       lastTime: new Date(),
     };
     this.client = client;
-    this.env = env;
 
     ws.addEventListener('error', event => {
       console.error('ws error', event.message);
@@ -81,34 +66,47 @@ export default class RoomService {
     this.startRoomCheck();
   }
 
-  static async getRoomMembers(codeId: string, ctx?: Context) {
-    ctx && !this.env && (this.env = ctx.env);
-    ctx && !this.client && (this.client = { codeId } as any);
-    const room = await this.getRoomInfo();
+  static async getRoomMemberInfos(members: RoomMember[]) {
     const memberList: UserInfo[] = [];
-    for (let i = 0; i < room.m.length; i++) {
-      if (!(room.m[i].l > Date.now() - HEALTH_TIME)) continue;
-      const user = await UserEntity.findOneBy({ id: room.m[i].u });
-      user && memberList.push({ ...user, memberId: room.m[i].m });
+    for (let i = 0; i < members.length; i++) {
+      if (!(members[i].lastSeen > Date.now() - HEALTH_TIME)) continue;
+      const user = await UserEntity.findOneBy({ id: members[i].userId });
+      user && memberList.push({ ...user, memberId: members[i].memberId });
     }
     return memberList;
   }
 
-  static async getRoomVersion(codeId?: string, ctx?: Context) {
-    ctx && !this.env && (this.env = ctx.env);
-    ctx && !this.client && (this.client = { codeId } as any);
-    const room = await this.getRoomInfo();
-    return room.v;
+  static async getRoomVersion() {
+    const room = await this.getRoomRawInfo();
+    return room.version;
   }
 
-  static async getRoomInfo() {
-    const str = await this.env.CollaEditorKV.get(this.cacheName);
-    const room: RoomInfo = JSON.parse(str || '{ "v": 0, "m": [] }');
-    return room;
+  static async getRoomRawInfo(codeId?: string) {
+    const roomInfo = await RoomEntity.findOneBy({ codeId: codeId || this.client.codeId });
+    return {
+      version: roomInfo?.version || 0,
+      members: roomInfo?.getMembers() || [],
+    };
+  }
+
+  static async getRoomInfo(codeId?: string) {
+    const roomInfo = await this.getRoomRawInfo(codeId);
+    return {
+      version: roomInfo?.version || 0,
+      members: await this.getRoomMemberInfos(roomInfo.members),
+    };
   }
 
   private static handleClose() {
     this.handleRoomChange(RoomChangeType.UserLeave);
+    if (this.roomCheckTimer) {
+      clearInterval(this.roomCheckTimer);
+      this.roomCheckTimer = null;
+    }
+    if (this.healthCheckTimer) {
+      clearInterval(this.healthCheckTimer);
+      this.healthCheckTimer = null;
+    }
   }
 
   private static handleMessages(messages: SocketMessage[]) {
@@ -164,89 +162,93 @@ export default class RoomService {
   }
 
   private static async checkRoomVersion() {
-    if (!this.lastRoomInfo) return;
-    const str = await this.env.CollaEditorKV.get(this.cacheName);
-    if (!str) return;
-    const room: RoomInfo = JSON.parse(str);
-    if (room.v === this.lastRoomInfo.v) return;
-    const oldMap = this.lastRoomInfo.m.reduce((map, member) => {
-      map[member.m] = member;
+    const room = await this.getRoomRawInfo();
+    if (!this.lastRoomInfo) {
+      this.lastRoomInfo = room;
+      return;
+    }
+    if (room.version === this.lastRoomInfo.version) return;
+    const oldMap = this.lastRoomInfo.members.reduce((map, member) => {
+      map[member.memberId] = member;
       return map;
-    }, {} as { [key: number]: RoomMemberInfo });
-    const newMap = room.m.reduce((map, member) => {
-      map[member.m] = member;
+    }, {} as { [key: number]: RoomMember });
+    const newMap = room.members.reduce((map, member) => {
+      map[member.memberId] = member;
       return map;
-    }, {} as { [key: number]: RoomMemberInfo });
-    const enterMembers = room.m.filter(member => !oldMap[member.m]);
-    const leaveMembers = this.lastRoomInfo.m.filter(member => !newMap[member.m]);
-    const cursorChangeMembers = room.m.filter(member => {
-      const oldMember = oldMap[member.m];
-      if (!oldMember) return !!member.c;
-      if (member.c && (oldMember.c?.[0] !== member.c?.[0] || oldMember.c?.[1] !== member.c?.[1])) return true;
+    }, {} as { [key: number]: RoomMember });
+    const enterMembers = room.members.filter(member => !oldMap[member.memberId] && member.memberId !== this.client.memberId);
+    const leaveMembers = this.lastRoomInfo.members.filter(member => !newMap[member.memberId] && member.memberId !== this.client.memberId);
+    const cursorChangeMembers = room.members.filter(member => {
+      const oldMember = oldMap[member.memberId];
+      if (member.memberId === this.client.memberId) return false;
+      if (!oldMember) return !!member.cursor;
+      if (member.cursor && (oldMember.cursor?.[0] !== member.cursor?.[0] || oldMember.cursor?.[1] !== member.cursor?.[1])) return true;
       return false;
     });
     const userInfoMap: { [userId: number]: UserEntity } = {};
     const users = [...enterMembers, ...leaveMembers];
     for (let i = 0; i < users.length; i++) {
-      if (userInfoMap[users[i].u]) continue;
-      const info = await UserEntity.findOneBy({ id: users[i].u });
-      if (info) userInfoMap[users[i].u] = info;
+      if (userInfoMap[users[i].userId]) continue;
+      const info = await UserEntity.findOneBy({ id: users[i].userId });
+      if (info) userInfoMap[users[i].userId] = info;
     }
-    const roomChanges: RoomChangeMessage[] = [];
+    const roomChanges: RoomChangeMessage['data']['changes'] = [];
     [
       { arr: enterMembers, type: RoomChangeType.UserEnter },
       { arr: leaveMembers, type: RoomChangeType.UserLeave },
     ].forEach(({ arr, type }) => {
-      roomChanges.push({
-        type: SocketMessageType.RoomChange,
-        data: {
-          changes: arr.map(user => ({
-            type,
-            user: {
-              ...userInfoMap[user.u],
-              memberId: user.m,
-            },
-          })),
-          roomVersion: room.v,
+      roomChanges.push(...arr.map(user => ({
+        type,
+        user: {
+          ...userInfoMap[user.userId],
+          memberId: user.memberId,
         },
-      });
+      })));
     });
+    const roomChangeMessages: RoomChangeMessage[] = roomChanges.length ? [{
+      type: SocketMessageType.RoomChange,
+      data: {
+        changes: roomChanges,
+        roomVersion: room.version,
+      },
+    }] :  [];
     const cursorChanges = cursorChangeMembers.map(item => ({
       type: SocketMessageType.CursorChange,
       data: {
-        userId: item.u,
-        memberId: item.m,
+        userId: item.userId,
+        memberId: item.memberId,
         cursor: {
-          rangeStart: item.c![0],
-          rangeEnd: item.c![1],
+          rangeStart: item.cursor![0],
+          rangeEnd: item.cursor![1],
         },
       },
     } as CursorChangeMessage));
     this.lastRoomInfo = room;
-    if (roomChanges.length || cursorChanges.length) {
-      this.client.ws.send(JSON.stringify(([] as any[]).concat(roomChanges, cursorChanges)));
+    if (roomChangeMessages.length || cursorChanges.length) {
+      this.client.ws.send(JSON.stringify(([] as SocketMessage[]).concat(roomChangeMessages, cursorChanges)));
     }
   }
 
   private static async updateRoomVersion(keepVer?: boolean) {
-    const room = await this.getRoomInfo();
-    const index = room.m.findIndex(item => item.m === this.client.memberId);
-    const data: RoomMemberInfo = {
-      m: this.client.memberId,
-      u: this.client.userId,
-      c: this.client.cursor && [this.client.cursor.rangeStart, this.client.cursor.rangeEnd],
-      l: Date.now(),
+    const room = await this.getRoomRawInfo();
+    const index = room.members.findIndex(item => item.memberId === this.client.memberId);
+    const data: RoomMember = {
+      memberId: this.client.memberId,
+      userId: this.client.userId,
+      cursor: this.client.cursor && [this.client.cursor.rangeStart, this.client.cursor.rangeEnd],
+      lastSeen: Date.now(),
     };
     if (index !== -1) {
-      room.m[index] = data;
+      room.members[index] = data;
     } else {
-      room.m.push(data);
+      room.members.push(data);
     }
-    if (!keepVer) room.v += 1;
-    room.m = room.m.filter(item => item.l > Date.now() - HEALTH_TIME);
+    if (!keepVer) room.version += 1;
+    room.members = room.members.filter(item => item.lastSeen > Date.now() - HEALTH_TIME);
     this.lastRoomInfo = room;
-    await this.env.CollaEditorKV.put(this.cacheName, JSON.stringify(room), {
-      expirationTtl: CACHE_TTL,
+    await RoomEntity.update({ codeId: this.client.codeId }, {
+      version: room.version,
+      members: JSON.stringify(room.members),
     });
   }
 

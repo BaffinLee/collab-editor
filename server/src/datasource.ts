@@ -3,6 +3,7 @@ import ChangesetEntity from "./entity/ChangesetEntity";
 import CodeEntity from "./entity/CodeEntity";
 import SnapshotEntity from "./entity/SnapshotEntity";
 import UserEntity from "./entity/UserEntity";
+import RoomEntity from "./entity/RoomEntity";
 
 let AppDataSource: DataSource | null = null;
 
@@ -11,7 +12,7 @@ export async function getDataSource(options?: Partial<DataSourceOptions & { type
     AppDataSource = new DataSource({
       type: 'sqlite',
       database: 'database.sqlite',
-      entities: [ChangesetEntity, CodeEntity, SnapshotEntity, UserEntity],
+      entities: [ChangesetEntity, CodeEntity, SnapshotEntity, UserEntity, RoomEntity],
       synchronize: true,
       logging: false,
       ...options,

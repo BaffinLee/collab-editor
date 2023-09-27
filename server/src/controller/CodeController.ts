@@ -24,12 +24,7 @@ export default class CodeController {
   static async getMembers(ctx: Context) {
     const service = ctx.env?.WORKER ? RoomServiceWorker : RoomService;
     const codeId = ctx.params.codeId || '';
-    const members = await service.getRoomMembers(codeId, ctx);
-    const version = await service.getRoomVersion(codeId, ctx);
-    ctx.body = {
-      members,
-      version,
-    };
+    ctx.body = await service.getRoomInfo(codeId, ctx);
   }
 
   static async uploadChangeset(ctx: Context) {
