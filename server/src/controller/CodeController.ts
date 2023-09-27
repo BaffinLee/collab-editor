@@ -24,7 +24,7 @@ export default class CodeController {
   static async getMembers(ctx: Context) {
     const service = ctx.env?.WORKER ? RoomServiceWorker : RoomService;
     const codeId = ctx.params.codeId || '';
-    ctx.body = await service.getRoomInfo(codeId, ctx);
+    ctx.body = await service.getRoomInfo(codeId);
   }
 
   static async uploadChangeset(ctx: Context) {
@@ -85,22 +85,24 @@ export default class CodeController {
         await transactionalEntityManager.save(changeset);
       });
 
-      RoomService.broadcastMessages([operations.length > 100 ? {
-        type: SocketMessageType.Heartbeat,
-        data: {
-          version: codeVersion + 1,
-        },
-      } : {
-        type: SocketMessageType.UserChange,
-        data: {
-          changesets: [new Changeset(
-            operations,
-            userId,
-            memberId,
-            codeVersion,
-          )],
-        },
-      }], codeId, memberId);
+      ctx.env?.WORKER
+        ? await RoomServiceWorker.updateRoomVersion({ codeId, userId, memberId })
+        : RoomService.broadcastMessages([operations.length > 100 ? {
+            type: SocketMessageType.Heartbeat,
+            data: {
+              version: codeVersion + 1,
+            },
+          } : {
+            type: SocketMessageType.UserChange,
+            data: {
+              changesets: [new Changeset(
+                operations,
+                userId,
+                memberId,
+                codeVersion,
+              )],
+            },
+          }], codeId, memberId);
 
       releaseLock(codeId);
 
@@ -138,7 +140,8 @@ export default class CodeController {
     language = language?.trim();
     memberId = Number(memberId);
     const codeId = ctx.params.codeId;
-    if ((title === undefined && language === undefined) || !memberId || !codeId) {
+    const userId = Number(ctx.cookies.get('user_id') || ctx.query.userId);
+    if ((title === undefined && language === undefined) || !memberId || !codeId || !userId) {
       ctx.status = 400;
       return;
     }
@@ -154,14 +157,16 @@ export default class CodeController {
     code.metaVersion = code.metaVersion + 1;
     await code.save();
 
-    RoomService.broadcastMessages([{
-      type: SocketMessageType.MetaChange,
-      data: {
-        title,
-        language,
-        metaVersion: code.metaVersion,
-      },
-    }], codeId, memberId);
+    ctx.env?.WORKER
+      ? await RoomServiceWorker.updateRoomVersion({ codeId, memberId, userId })
+      : RoomService.broadcastMessages([{
+        type: SocketMessageType.MetaChange,
+        data: {
+          title,
+          language,
+          metaVersion: code.metaVersion,
+        },
+      }], codeId, memberId);
 
     ctx.body = {};
   }

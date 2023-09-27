@@ -1,4 +1,4 @@
-import { UserInfo, WebSocketState } from "../../../common/type";
+import { UserInfo } from "../../../common/type";
 import { CursorChangeMessage, HeartbeatMessage, RoomChangeMessage, RoomChangeType, SocketMessage, SocketMessageType } from "../../../common/type/message";
 import CodeEntity from "../entity/CodeEntity";
 import UserEntity from "../entity/UserEntity";
@@ -13,7 +13,7 @@ interface ClientInfo {
   cursor?: CursorChangeMessage['data']['cursor'];
 }
 
-const HEALTH_TIME = 60 * 1000;
+const HEALTH_TIME = 50 * 1000;
 const CHECK_ROOM_TIME = 1500;
 
 export default class RoomService {
@@ -98,6 +98,49 @@ export default class RoomService {
     };
   }
 
+  static async updateRoomVersion(info?: {
+    keepVer?: boolean,
+    isLeaving?: boolean,
+    memberId?: number,
+    userId?: number,
+    codeId?: string,
+  }) {
+    const codeId = info?.codeId || this.client.codeId;
+    const memberId = info?.memberId || this.client.memberId;
+    const userId = info?.userId || this.client.userId;
+    const room = await this.getRoomRawInfo(codeId);
+    const index = room.members.findIndex(item => item.memberId === memberId);
+    const data: RoomMember = {
+      memberId,
+      userId,
+      cursor: this.client?.cursor
+        ? [this.client.cursor.rangeStart, this.client.cursor.rangeEnd]
+        : room.members[index]?.cursor,
+      lastSeen: Date.now(),
+    };
+    if (info?.isLeaving) {
+      index !== -1 && room.members.splice(index, 1);
+    } else if (index !== -1) {
+      room.members[index] = data;
+    } else {
+      room.members.push(data);
+    }
+    if (!info?.keepVer) room.version += 1;
+    room.members = room.members.filter(item => item.lastSeen > Date.now() - HEALTH_TIME);
+    this.lastRoomInfo = room;
+    room.id
+      ? await RoomEntity.update({ id: room.id }, {
+          version: room.version,
+          members: JSON.stringify(room.members),
+        })
+      : await RoomEntity.save({
+          codeId,
+          version: room.version,
+          members: JSON.stringify(room.members),
+        });
+    return room;
+  }
+
   private static handleClose() {
     this.handleRoomChange(RoomChangeType.UserLeave);
     if (this.roomCheckTimer) {
@@ -114,8 +157,7 @@ export default class RoomService {
     messages.forEach(message => {
       switch (message.type) {
         case SocketMessageType.Heartbeat:
-          this.handleHeartbeat();
-          this.updateRoomVersion(true);
+          this.updateRoomVersion({ keepVer: true }).then(() => this.handleHeartbeat());
           break;
         case SocketMessageType.CursorChange:
           this.client.cursor = message.data.cursor;
@@ -127,7 +169,7 @@ export default class RoomService {
 
   private static async handleHeartbeat() {
     const code = await CodeEntity.findOneBy({ codeId: this.client.codeId });
-    if (!code || this.client.ws.readyState !== WebSocketState.Ready) {
+    if (!code) {
       return;
     }
     const message: HeartbeatMessage = {
@@ -135,14 +177,14 @@ export default class RoomService {
       data: {
         version: code.version,
         metaVersion: code.metaVersion,
-        roomVersion: await this.getRoomVersion(),
+        roomVersion: this.lastRoomInfo?.version || 0,
       },
     };
     this.client.ws.send(JSON.stringify([message]));
   }
 
   private static async handleRoomChange(type: RoomChangeType) {
-    await this.updateRoomVersion(false, type === RoomChangeType.UserLeave);
+    await this.updateRoomVersion({ isLeaving: type === RoomChangeType.UserLeave });
   }
 
   private static startHealthCheck() {
@@ -225,39 +267,9 @@ export default class RoomService {
       },
     } as CursorChangeMessage));
     this.lastRoomInfo = room;
+    await this.handleHeartbeat();
     if (roomChangeMessages.length || cursorChanges.length) {
       this.client.ws.send(JSON.stringify(([] as SocketMessage[]).concat(roomChangeMessages, cursorChanges)));
     }
-  }
-
-  private static async updateRoomVersion(keepVer?: boolean, isLeaving?: boolean) {
-    const room = await this.getRoomRawInfo();
-    const index = room.members.findIndex(item => item.memberId === this.client.memberId);
-    const data: RoomMember = {
-      memberId: this.client.memberId,
-      userId: this.client.userId,
-      cursor: this.client.cursor && [this.client.cursor.rangeStart, this.client.cursor.rangeEnd],
-      lastSeen: Date.now(),
-    };
-    if (isLeaving) {
-      index !== -1 && room.members.splice(index, 1);
-    } else if (index !== -1) {
-      room.members[index] = data;
-    } else {
-      room.members.push(data);
-    }
-    if (!keepVer) room.version += 1;
-    room.members = room.members.filter(item => item.lastSeen > Date.now() - HEALTH_TIME);
-    this.lastRoomInfo = room;
-    room.id
-      ? await RoomEntity.update({ id: room.id }, {
-          version: room.version,
-          members: JSON.stringify(room.members),
-        })
-      : await RoomEntity.save({
-          codeId: this.client.codeId,
-          version: room.version,
-          members: JSON.stringify(room.members),
-        });
   }
 }
