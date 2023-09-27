@@ -23,6 +23,7 @@ export default class RoomService {
     } | undefined;
   } = {};
   static healthCheckTimer: NodeJS.Timer | null = null;
+  static userInfoMap: { [userId: number]: Omit<UserInfo, 'memberId'> } = {};
 
   static handleConnection(ws: WebSocket, req: IncomingMessage) {
     const url = new URL(req.url || '', 'http://127.0.0.1');
@@ -83,7 +84,7 @@ export default class RoomService {
     const memberList: UserInfo[] = [];
     const arr = this.connectionMap[codeId]?.clients || [];
     for (let i = 0; i < arr.length; i++) {
-      const user = await UserEntity.findOneBy({ id: arr[i].userId });
+      const user = await this.getUserInfo(arr[i].userId);
       user && memberList.push({ ...user, memberId: arr[i].memberId });
     }
     return memberList;
@@ -141,7 +142,7 @@ export default class RoomService {
   }
 
   private static async handleRoomChange(client: ClientInfo, type: RoomChangeType) {
-    const user = await UserEntity.findOneBy({ id: client.userId });
+    const user = await this.getUserInfo(client.userId);
     if (!user) {
       return;
     }
@@ -176,5 +177,17 @@ export default class RoomService {
         }
       });
     }, HEALTH_TIME);
+  }
+
+  private static async getUserInfo(userId: number) {
+    if (!this.userInfoMap[userId]) {
+      const userInfo = await UserEntity.findOneBy({ id: userId });
+      userInfo && (this.userInfoMap[userId] = {
+        id: userInfo.id,
+        avatar: userInfo.avatar,
+        name: userInfo.name,
+      });
+    }
+    return this.userInfoMap[userId];
   }
 }

@@ -13,7 +13,7 @@ interface ClientInfo {
   cursor?: CursorChangeMessage['data']['cursor'];
 }
 
-const HEALTH_TIME = 50 * 1000;
+const HEALTH_TIME = 60 * 1000;
 const CHECK_ROOM_TIME = 1500;
 
 export default class RoomService {
@@ -21,6 +21,7 @@ export default class RoomService {
   static healthCheckTimer: NodeJS.Timer | null = null;
   static roomCheckTimer: NodeJS.Timer | null = null;
   static lastRoomInfo: { version: number; members: RoomMember[] } | null = null;
+  static userInfoMap: { [userId: number]: Omit<UserInfo, 'memberId'> } = {};
 
   static handleConnection(ws: WebSocket, req: Request) {
     const url = new URL(req.url || '', 'http://127.0.0.1');
@@ -70,7 +71,7 @@ export default class RoomService {
     const memberList: UserInfo[] = [];
     for (let i = 0; i < members.length; i++) {
       if (!(members[i].lastSeen > Date.now() - HEALTH_TIME)) continue;
-      const user = await UserEntity.findOneBy({ id: members[i].userId });
+      const user = await this.getUserInfo(members[i].userId);
       user && memberList.push({ ...user, memberId: members[i].memberId });
     }
     return memberList;
@@ -228,12 +229,9 @@ export default class RoomService {
       if (member.cursor && (oldMember.cursor?.[0] !== member.cursor?.[0] || oldMember.cursor?.[1] !== member.cursor?.[1])) return true;
       return false;
     });
-    const userInfoMap: { [userId: number]: UserEntity } = {};
     const users = [...enterMembers, ...leaveMembers];
     for (let i = 0; i < users.length; i++) {
-      if (userInfoMap[users[i].userId]) continue;
-      const info = await UserEntity.findOneBy({ id: users[i].userId });
-      if (info) userInfoMap[users[i].userId] = info;
+      await this.getUserInfo(users[i].userId);
     }
     const roomChanges: RoomChangeMessage['data']['changes'] = [];
     [
@@ -243,7 +241,7 @@ export default class RoomService {
       roomChanges.push(...arr.map(user => ({
         type,
         user: {
-          ...userInfoMap[user.userId],
+          ...this.userInfoMap[user.userId],
           memberId: user.memberId,
         },
       })));
@@ -271,5 +269,17 @@ export default class RoomService {
     if (roomChangeMessages.length || cursorChanges.length) {
       this.client.ws.send(JSON.stringify(([] as SocketMessage[]).concat(roomChangeMessages, cursorChanges)));
     }
+  }
+
+  private static async getUserInfo(userId: number) {
+    if (!this.userInfoMap[userId]) {
+      const userInfo = await UserEntity.findOneBy({ id: userId });
+      userInfo && (this.userInfoMap[userId] = {
+        id: userInfo.id,
+        avatar: userInfo.avatar,
+        name: userInfo.name,
+      });
+    }
+    return this.userInfoMap[userId];
   }
 }
