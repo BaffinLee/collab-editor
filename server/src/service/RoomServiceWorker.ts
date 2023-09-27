@@ -84,6 +84,7 @@ export default class RoomService {
   static async getRoomRawInfo(codeId?: string) {
     const roomInfo = await RoomEntity.findOneBy({ codeId: codeId || this.client.codeId });
     return {
+      ...roomInfo,
       version: roomInfo?.version || 0,
       members: roomInfo?.getMembers() || [],
     };
@@ -141,7 +142,7 @@ export default class RoomService {
   }
 
   private static async handleRoomChange(type: RoomChangeType) {
-    await this.updateRoomVersion();
+    await this.updateRoomVersion(false, type === RoomChangeType.UserLeave);
   }
 
   private static startHealthCheck() {
@@ -229,7 +230,7 @@ export default class RoomService {
     }
   }
 
-  private static async updateRoomVersion(keepVer?: boolean) {
+  private static async updateRoomVersion(keepVer?: boolean, isLeaving?: boolean) {
     const room = await this.getRoomRawInfo();
     const index = room.members.findIndex(item => item.memberId === this.client.memberId);
     const data: RoomMember = {
@@ -238,7 +239,9 @@ export default class RoomService {
       cursor: this.client.cursor && [this.client.cursor.rangeStart, this.client.cursor.rangeEnd],
       lastSeen: Date.now(),
     };
-    if (index !== -1) {
+    if (isLeaving) {
+      index !== -1 && room.members.splice(index, 1);
+    } else if (index !== -1) {
       room.members[index] = data;
     } else {
       room.members.push(data);
@@ -246,13 +249,15 @@ export default class RoomService {
     if (!keepVer) room.version += 1;
     room.members = room.members.filter(item => item.lastSeen > Date.now() - HEALTH_TIME);
     this.lastRoomInfo = room;
-    await RoomEntity.update({ codeId: this.client.codeId }, {
-      version: room.version,
-      members: JSON.stringify(room.members),
-    });
-  }
-
-  private static get cacheName() {
-    return `room_${this.client.codeId}`;
+    room.id
+      ? await RoomEntity.update({ id: room.id }, {
+          version: room.version,
+          members: JSON.stringify(room.members),
+        })
+      : await RoomEntity.save({
+          codeId: this.client.codeId,
+          version: room.version,
+          members: JSON.stringify(room.members),
+        });
   }
 }

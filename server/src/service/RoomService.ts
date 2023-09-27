@@ -4,7 +4,6 @@ import { UserInfo, WebSocketState } from "../../../common/type";
 import { HeartbeatMessage, RoomChangeType, SocketMessage, SocketMessageType } from "../../../common/type/message";
 import CodeEntity from "../entity/CodeEntity";
 import UserEntity from "../entity/UserEntity";
-import type { Context } from "koa";
 
 interface ClientInfo {
   codeId: string;
