@@ -1,8 +1,8 @@
 interface Env {
 	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
 	CollaEditorKV: KVNamespace;
-    // D1 Database
-    CollaEditorDB: D1Database;
+	// D1 Database
+	CollaEditorDB: D1Database;
 	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
 	// MY_DURABLE_OBJECT: DurableObjectNamespace;
 	//
@@ -16,6 +16,6 @@ interface Env {
 	// MY_QUEUE: Queue;
 	//
 	// Environment variables
-    DEV: string;
+  DEV: string;
 	WORKER: string;
 }

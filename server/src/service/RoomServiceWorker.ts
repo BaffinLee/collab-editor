@@ -14,7 +14,7 @@ interface ClientInfo {
 }
 
 const HEALTH_TIME = 60 * 1000;
-const CHECK_ROOM_TIME = 1500;
+const CHECK_ROOM_TIME = 1000;
 
 export default class RoomService {
   static client: ClientInfo;
