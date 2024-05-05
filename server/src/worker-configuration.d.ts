@@ -16,6 +16,6 @@ interface Env {
 	// MY_QUEUE: Queue;
 	//
 	// Environment variables
-  DEV: string;
+  	DEV: string;
 	WORKER: string;
 }
